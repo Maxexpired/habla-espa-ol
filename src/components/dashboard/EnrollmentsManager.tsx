@@ -100,10 +100,39 @@ export const EnrollmentsManager = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Estado actualizado",
-        description: `El estado de la inscripción se actualizó a ${newStatus}`,
-      });
+      // Generate certificate if marking as completed
+      if (newStatus === "completed") {
+        toast({
+          title: "Generando certificado...",
+          description: "Esto puede tomar unos segundos",
+        });
+
+        const { error: certError } = await supabase.functions.invoke(
+          "generate-certificate",
+          {
+            body: { enrollmentId },
+          }
+        );
+
+        if (certError) {
+          console.error("Certificate generation error:", certError);
+          toast({
+            title: "Advertencia",
+            description: "El curso se marcó como completado pero hubo un error al generar el certificado",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "¡Completado!",
+            description: "Se ha generado el certificado automáticamente",
+          });
+        }
+      } else {
+        toast({
+          title: "Estado actualizado",
+          description: `El estado de la inscripción se actualizó a ${newStatus}`,
+        });
+      }
 
       fetchEnrollments();
       fetchCourseStats();
