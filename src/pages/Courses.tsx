@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { BookOpen, CheckCircle } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Course {
   id: string;
@@ -15,13 +19,25 @@ interface Course {
   image_url: string | null;
 }
 
+interface Enrollment {
+  course_id: string;
+  status: string;
+}
+
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
-  }, []);
+    if (user) {
+      fetchEnrollments();
+    }
+  }, [user]);
 
   const fetchCourses = async () => {
     const { data, error } = await supabase
@@ -34,6 +50,68 @@ export default function Courses() {
       setCourses(data);
     }
     setLoading(false);
+  };
+
+  const fetchEnrollments = async () => {
+    if (!user) return;
+    
+    const { data } = await supabase
+      .from("enrollments")
+      .select("course_id, status")
+      .eq("user_id", user.id);
+
+    if (data) {
+      setEnrollments(data);
+    }
+  };
+
+  const isEnrolled = (courseId: string) => {
+    return enrollments.some(
+      (e) => e.course_id === courseId && e.status === "active"
+    );
+  };
+
+  const handleEnroll = async (courseId: string) => {
+    if (!user) {
+      toast({
+        title: "Inicia sesión",
+        description: "Debes iniciar sesión para inscribirte a un curso",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      const { error } = await supabase.from("enrollments").insert({
+        user_id: user.id,
+        course_id: courseId,
+      });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast({
+            title: "Ya estás inscrito",
+            description: "Ya estás inscrito en este curso",
+            variant: "destructive",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        toast({
+          title: "¡Inscripción exitosa!",
+          description: "Te has inscrito correctamente al curso",
+        });
+        fetchEnrollments();
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -76,7 +154,7 @@ export default function Courses() {
                   </div>
                   <CardDescription>{course.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
                     {course.topics.map((topic, idx) => (
                       <Badge key={idx} variant="secondary">
@@ -84,6 +162,19 @@ export default function Courses() {
                       </Badge>
                     ))}
                   </div>
+                  {user && isEnrolled(course.id) ? (
+                    <Button className="w-full" disabled>
+                      <CheckCircle className="mr-2 h-4 w-4" />
+                      Ya inscrito
+                    </Button>
+                  ) : (
+                    <Button
+                      className="w-full"
+                      onClick={() => handleEnroll(course.id)}
+                    >
+                      Inscribirse al curso
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
