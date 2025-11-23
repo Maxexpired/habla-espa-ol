@@ -7,6 +7,7 @@ import { CoursesManager } from "@/components/dashboard/CoursesManager";
 import { ProjectsManager } from "@/components/dashboard/ProjectsManager";
 import { NewsManager } from "@/components/dashboard/NewsManager";
 import { FAQsManager } from "@/components/dashboard/FAQsManager";
+import { EnrollmentsManager } from "@/components/dashboard/EnrollmentsManager";
 import { Shield } from "lucide-react";
 
 export default function Dashboard() {
@@ -46,8 +47,9 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
             <TabsTrigger value="courses">Cursos</TabsTrigger>
+            <TabsTrigger value="enrollments">Inscripciones</TabsTrigger>
             <TabsTrigger value="projects">Proyectos</TabsTrigger>
             <TabsTrigger value="news">Noticias</TabsTrigger>
             <TabsTrigger value="faqs">FAQs</TabsTrigger>
@@ -55,6 +57,10 @@ export default function Dashboard() {
 
           <TabsContent value="courses">
             <CoursesManager />
+          </TabsContent>
+
+          <TabsContent value="enrollments">
+            <EnrollmentsManager />
           </TabsContent>
 
           <TabsContent value="projects">
