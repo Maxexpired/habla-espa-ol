@@ -1,8 +1,20 @@
-import { Search, User } from "lucide-react";
+import { Search, User, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Header = () => {
+  const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <header className="bg-serene-secondary sticky top-0 z-50 shadow-lg">
       <div className="container mx-auto px-4">
@@ -35,15 +47,44 @@ export const Header = () => {
             </div>
           </form>
 
-          {/* User Icon */}
+          {/* User Menu */}
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10"
-            >
-              <User className="h-6 w-6" />
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:bg-white/10"
+                  >
+                    <User className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {isAdmin && (
+                    <>
+                      <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+                        <Shield className="mr-2 h-4 w-4" />
+                        Dashboard Admin
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                    </>
+                  )}
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Cerrar Sesión
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/10"
+                onClick={() => navigate("/auth")}
+              >
+                Iniciar Sesión
+              </Button>
+            )}
           </div>
         </div>
       </div>
