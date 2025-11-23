@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, GraduationCap } from "lucide-react";
+import { BookOpen, GraduationCap, Award, Download } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -24,8 +24,16 @@ interface EnrollmentWithCourse {
   };
 }
 
+interface Certificate {
+  id: string;
+  certificate_number: string;
+  file_url: string;
+  issued_at: string;
+}
+
 export default function MyCourses() {
   const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
+  const [certificates, setCertificates] = useState<Record<string, Certificate>>({});
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -37,6 +45,7 @@ export default function MyCourses() {
       return;
     }
     fetchEnrollments();
+    fetchCertificates();
   }, [user, navigate]);
 
   const fetchEnrollments = async () => {
@@ -57,6 +66,23 @@ export default function MyCourses() {
     setLoading(false);
   };
 
+  const fetchCertificates = async () => {
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("certificates")
+      .select("*")
+      .eq("user_id", user.id);
+
+    if (data) {
+      const certMap = data.reduce((acc, cert) => {
+        acc[cert.enrollment_id] = cert;
+        return acc;
+      }, {} as Record<string, Certificate>);
+      setCertificates(certMap);
+    }
+  };
+
   const handleCancelEnrollment = async (enrollmentId: string) => {
     if (!confirm("¿Estás seguro de que deseas cancelar tu inscripción?")) return;
 
@@ -73,12 +99,25 @@ export default function MyCourses() {
         description: "Has cancelado tu inscripción al curso",
       });
       fetchEnrollments();
+      fetchCertificates();
     } catch (error: any) {
       toast({
         title: "Error",
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleDownloadCertificate = (certificate: Certificate) => {
+    // Open certificate in new window where it can be printed as PDF
+    const printWindow = window.open(certificate.file_url, '_blank');
+    if (printWindow) {
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      };
     }
   };
 
@@ -165,6 +204,19 @@ export default function MyCourses() {
                     Inscrito el:{" "}
                     {new Date(enrollment.enrolled_at).toLocaleDateString("es-ES")}
                   </p>
+                  
+                  {enrollment.status === "completed" && certificates[enrollment.id] && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="w-full bg-serene-primary hover:bg-serene-secondary"
+                      onClick={() => handleDownloadCertificate(certificates[enrollment.id])}
+                    >
+                      <Award className="mr-2 h-4 w-4" />
+                      Descargar Certificado
+                    </Button>
+                  )}
+                  
                   {enrollment.status === "active" && (
                     <Button
                       variant="outline"
