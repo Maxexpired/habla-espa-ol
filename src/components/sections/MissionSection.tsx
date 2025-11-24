@@ -40,8 +40,8 @@ export const MissionSection = () => {
               <Card className="group card-hover border-0 gradient-card backdrop-blur-sm glow-border">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="bg-gradient-accent p-2.5 sm:p-3 rounded-xl flex-shrink-0 shadow-glow">
-                      <Target className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <div className="bg-serene-accent p-2.5 sm:p-3 rounded-xl flex-shrink-0 shadow-glow group-hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] transition-shadow">
+                      <Target className="h-5 w-5 sm:h-6 sm:w-6 text-serene-dark drop-shadow-lg" strokeWidth={2.5} />
                     </div>
                     <div>
                       <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2 sm:mb-3 flex items-center gap-2">
@@ -60,8 +60,8 @@ export const MissionSection = () => {
               <Card className="group card-hover border-0 gradient-card backdrop-blur-sm glow-border">
                 <CardContent className="p-4 sm:p-6">
                   <div className="flex items-start gap-3 sm:gap-4">
-                    <div className="bg-gradient-accent p-2.5 sm:p-3 rounded-xl flex-shrink-0 shadow-glow">
-                      <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    <div className="bg-serene-accent p-2.5 sm:p-3 rounded-xl flex-shrink-0 shadow-glow group-hover:shadow-[0_0_30px_rgba(6,182,212,0.6)] transition-shadow">
+                      <Eye className="h-5 w-5 sm:h-6 sm:w-6 text-serene-dark drop-shadow-lg" strokeWidth={2.5} />
                     </div>
                     <div>
                       <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-2 sm:mb-3 flex items-center gap-2">
