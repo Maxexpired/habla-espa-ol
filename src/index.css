@@ -8,55 +8,55 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 220 26% 14%;
+    --background: 245 245% 97%;
+    --foreground: 200 20% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 220 26% 14%;
+    --card-foreground: 200 20% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
+    --popover-foreground: 200 20% 15%;
 
-    --primary: 217 91% 25%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 190 100% 33%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 220 16% 88%;
-    --secondary-foreground: 220 26% 14%;
+    --secondary: 190 100% 45%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 220 13% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted: 210 15% 94%;
+    --muted-foreground: 200 10% 45%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 220 26% 14%;
+    --accent: 190 100% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 217 91% 25%;
+    --border: 200 15% 88%;
+    --input: 200 15% 88%;
+    --ring: 190 100% 33%;
 
     --radius: 0.5rem;
 
-    /* Serene Custom Colors */
-    --serene-primary: 217 91% 25%; /* Deep professional blue */
-    --serene-secondary: 217 91% 35%; /* Lighter blue */
-    --serene-dark: 220 26% 14%; /* Rich dark navy */
-    --serene-light: 0 0% 98%;
-    --serene-accent: 38 92% 50%; /* Sophisticated amber gold */
-    --serene-accent-light: 38 92% 60%;
+    /* Serene Custom Colors - Turquoise Theme */
+    --serene-primary: 190 100% 33%; /* Turquoise from logo */
+    --serene-secondary: 190 100% 45%; /* Lighter turquoise */
+    --serene-dark: 200 25% 12%; /* Dark blue-gray */
+    --serene-light: 190 30% 96%;
+    --serene-accent: 190 100% 40%; /* Medium turquoise */
+    --serene-accent-light: 190 100% 50%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(217 91% 25%) 0%, hsl(217 91% 35%) 50%, hsl(38 92% 50%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(220 26% 14%) 0%, hsl(220 26% 18%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(220 13% 98%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(38 92% 50%) 0%, hsl(38 92% 60%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(190 100% 33%) 0%, hsl(190 100% 45%) 50%, hsl(190 100% 55%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(200 25% 12%) 0%, hsl(200 25% 16%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(190 30% 98%) 0%, hsl(190 20% 96%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(190 100% 40%) 0%, hsl(190 100% 50%) 100%);
     
     /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(28, 39, 66, 0.08);
-    --shadow-card: 0 8px 24px rgba(28, 39, 66, 0.12);
-    --shadow-card-hover: 0 16px 48px rgba(28, 39, 66, 0.18);
-    --shadow-glow: 0 0 32px rgba(251, 191, 36, 0.3);
+    --shadow-sm: 0 2px 8px rgba(0, 136, 170, 0.1);
+    --shadow-card: 0 8px 24px rgba(0, 136, 170, 0.15);
+    --shadow-card-hover: 0 16px 48px rgba(0, 136, 170, 0.25);
+    --shadow-glow: 0 0 32px rgba(0, 170, 204, 0.4);
     
     /* Transitions */
     --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -64,45 +64,45 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 220 26% 14%;
+    --background: 200 25% 12%;
     --foreground: 0 0% 98%;
 
-    --card: 220 26% 16%;
+    --card: 200 25% 16%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 220 26% 16%;
+    --popover: 200 25% 16%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 217 91% 45%;
+    --primary: 190 100% 45%;
     --primary-foreground: 0 0% 98%;
 
-    --secondary: 220 16% 22%;
+    --secondary: 200 20% 22%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 220 16% 20%;
-    --muted-foreground: 220 9% 65%;
+    --muted: 200 20% 20%;
+    --muted-foreground: 200 10% 65%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 220 26% 14%;
+    --accent: 190 100% 50%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 220 16% 22%;
-    --input: 220 16% 22%;
-    --ring: 38 92% 50%;
+    --border: 200 20% 22%;
+    --input: 200 20% 22%;
+    --ring: 190 100% 50%;
     
     /* Serene Custom Colors - Dark Mode */
-    --serene-primary: 217 91% 45%;
-    --serene-secondary: 217 91% 55%;
-    --serene-dark: 220 26% 12%;
+    --serene-primary: 190 100% 45%;
+    --serene-secondary: 190 100% 55%;
+    --serene-dark: 200 25% 10%;
     --serene-light: 0 0% 98%;
-    --serene-accent: 38 92% 55%;
-    --serene-accent-light: 38 92% 65%;
+    --serene-accent: 190 100% 50%;
+    --serene-accent-light: 190 100% 60%;
     
-    --gradient-hero: linear-gradient(135deg, hsl(217 91% 35%) 0%, hsl(217 91% 45%) 50%, hsl(38 92% 50%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(220 26% 16%) 0%, hsl(220 26% 20%) 100%);
-    --shadow-glow: 0 0 32px rgba(251, 191, 36, 0.4);
+    --gradient-hero: linear-gradient(135deg, hsl(190 100% 35%) 0%, hsl(190 100% 45%) 50%, hsl(190 100% 55%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(200 25% 16%) 0%, hsl(200 25% 20%) 100%);
+    --shadow-glow: 0 0 32px rgba(0, 170, 204, 0.5);
   }
 }
 

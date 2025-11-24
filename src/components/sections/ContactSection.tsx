@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export const ContactSection = () => {
   return (
-    <section id="contacto" className="py-12 sm:py-16 md:py-20 bg-white">
+    <section id="contacto" className="py-12 sm:py-16 md:py-20 gradient-subtle">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 sm:mb-12 md:mb-16">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">

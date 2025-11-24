@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export const MissionSection = () => {
   return (
-    <section id="mision" className="py-12 sm:py-16 md:py-20 bg-white">
+    <section id="mision" className="py-12 sm:py-16 md:py-20 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row items-center gap-8 sm:gap-10 lg:gap-12">
           {/* Image */}
