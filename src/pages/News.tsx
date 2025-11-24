@@ -4,6 +4,8 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Newspaper, Calendar } from "lucide-react";
 
 interface News {
@@ -17,6 +19,7 @@ interface News {
 export default function News() {
   const [news, setNews] = useState<News[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedNews, setSelectedNews] = useState<News | null>(null);
 
   useEffect(() => {
     fetchNews();
@@ -67,7 +70,7 @@ export default function News() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {news.map((item) => (
-              <Card key={item.id} className="hover:shadow-2xl transition-all duration-300 overflow-hidden group">
+              <Card key={item.id} className="hover:shadow-2xl transition-all duration-300 overflow-hidden group flex flex-col">
                 {item.image_url && (
                   <div className="relative h-64 overflow-hidden">
                     <img
@@ -88,15 +91,60 @@ export default function News() {
                     <span>{formatDate(item.created_at)}</span>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base leading-relaxed">
+                <CardContent className="flex-1 flex flex-col">
+                  <CardDescription className="text-base leading-relaxed line-clamp-3 mb-4">
                     {item.description}
                   </CardDescription>
+                  <Button 
+                    onClick={() => setSelectedNews(item)}
+                    className="mt-auto"
+                  >
+                    Leer más
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Modal de detalles de la noticia */}
+        <Dialog open={!!selectedNews} onOpenChange={() => setSelectedNews(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            {selectedNews && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-3xl flex items-center gap-3">
+                    <Newspaper className="h-8 w-8 text-serene-primary" />
+                    {selectedNews.title}
+                  </DialogTitle>
+                  <DialogDescription className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{formatDate(selectedNews.created_at)}</span>
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {selectedNews.image_url && (
+                  <div className="relative h-96 rounded-lg overflow-hidden">
+                    <img
+                      src={selectedNews.image_url}
+                      alt={selectedNews.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Contenido de la Noticia:</h3>
+                    <div className="prose prose-sm max-w-none whitespace-pre-line text-muted-foreground leading-relaxed">
+                      {selectedNews.description}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>
