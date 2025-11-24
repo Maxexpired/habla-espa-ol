@@ -51,9 +51,9 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-serene-dark shadow-md sticky top-[72px] z-40 border-b border-serene-accent/30">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 md:h-14">
+    <nav className="bg-serene-dark shadow-md sticky top-[60px] sm:top-[68px] md:top-[72px] z-40 border-b border-serene-accent/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-14 md:h-14">
           {/* Mobile Menu Toggle */}
           <Button
             variant="ghost"
@@ -65,12 +65,12 @@ export const Navbar = () => {
           </Button>
 
           {/* Desktop Menu */}
-          <ul className="hidden md:flex items-center gap-8 w-full justify-center">
+          <ul className="hidden md:flex items-center gap-4 lg:gap-8 w-full justify-center">
             {navItems.map((item) => (
               <li key={item.label}>
                 <button
                   onClick={() => handleNavClick(item.href)}
-                  className="text-white font-medium text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth relative group"
+                  className="text-white font-medium text-xs lg:text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth relative group"
                 >
                   {item.label}
                   <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-serene-accent group-hover:w-full transition-all duration-300" />
@@ -82,13 +82,13 @@ export const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden pb-4">
-            <ul className="flex flex-col gap-3">
+          <div className="md:hidden pb-4 pt-2">
+            <ul className="flex flex-col gap-2 sm:gap-3">
               {navItems.map((item) => (
                 <li key={item.label}>
                   <button
                     onClick={() => handleNavClick(item.href)}
-                    className="block text-white font-medium text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth py-2 w-full text-left"
+                    className="block text-white font-medium text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth py-2 w-full text-left pl-2"
                   >
                     {item.label}
                   </button>

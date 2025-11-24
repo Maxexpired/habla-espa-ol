@@ -54,18 +54,18 @@ export const CoursesSection = () => {
   }
 
   return (
-    <section id="cursos" className="py-20 bg-gradient-to-b from-white to-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
+    <section id="cursos" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-white to-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-10 sm:mb-12 md:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">
             Nuestros Cursos
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto px-4">
             Soluciones tecnológicas adaptadas a tus necesidades
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {courses.map((course) => {
             const Icon = iconMap[course.title] || Server;
             return (
@@ -74,18 +74,18 @@ export const CoursesSection = () => {
                 className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 cursor-pointer border-0 bg-gradient-to-br from-serene-dark to-gray-900 overflow-hidden"
                 onClick={() => navigate("/cursos")}
               >
-                <CardContent className="p-8 text-center">
-                  <div className="mb-6 inline-flex items-center justify-center w-20 h-20 rounded-full bg-serene-secondary/10 group-hover:bg-serene-secondary/20 transition-colors">
-                    <Icon className="h-10 w-10 text-serene-accent" />
+                <CardContent className="p-6 sm:p-8 text-center">
+                  <div className="mb-4 sm:mb-6 inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-serene-secondary/10 group-hover:bg-serene-secondary/20 transition-colors">
+                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-serene-accent" />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-4 group-hover:text-serene-accent transition-colors">
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-3 sm:mb-4 group-hover:text-serene-accent transition-colors px-2">
                     {course.title}
                   </h3>
-                  <div className="w-16 h-1 bg-serene-accent mx-auto mb-4" />
-                  <p className="text-gray-300 leading-relaxed line-clamp-3 mb-4">
+                  <div className="w-12 sm:w-16 h-1 bg-serene-accent mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-300 leading-relaxed line-clamp-3 mb-4 px-2">
                     {course.description.split('\n')[0]}
                   </p>
-                  <div className="flex flex-wrap gap-1 justify-center">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
                     {course.topics.slice(0, 3).map((topic, idx) => (
                       <Badge key={idx} variant="secondary" className="text-xs">
                         {topic}
