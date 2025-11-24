@@ -1,26 +1,60 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-const news = [
-  {
-    title: "Noticias1",
-    description: "Serene anuncia un nuevo programa de innovación en robótica doméstica.",
-    image: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=400&h=300&fit=crop",
-  },
-  {
-    title: "Noticias2",
-    description: "Avances en inteligencia artificial aplicada al sector educativo.",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400&h=300&fit=crop",
-  },
-  {
-    title: "Noticias3",
-    description: "Nuevo taller de Python para análisis de datos e innovación tecnológica.",
-    image: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=300&fit=crop",
-  },
-];
+interface News {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string | null;
+  created_at: string;
+}
 
 export const NewsSection = () => {
+  const [news, setNews] = useState<News[]>([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchNews();
+  }, []);
+
+  const fetchNews = async () => {
+    const { data, error } = await supabase
+      .from("news")
+      .select("*")
+      .eq("published", true)
+      .order("created_at", { ascending: false })
+      .limit(3);
+
+    if (!error && data) {
+      setNews(data);
+    }
+    setLoading(false);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <section id="noticias" className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center">Cargando noticias...</div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="noticias" className="py-20 bg-gradient-to-b from-gray-50 to-white">
       <div className="container mx-auto px-4">
@@ -34,25 +68,32 @@ export const NewsSection = () => {
         </div>
 
         <div className="flex flex-col gap-6 max-w-5xl mx-auto">
-          {news.map((item, index) => (
+          {news.map((item) => (
             <Card
-              key={index}
+              key={item.id}
               className="group overflow-hidden cursor-pointer hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 bg-gradient-to-r from-serene-dark to-gray-900"
+              onClick={() => navigate("/noticias")}
             >
               <CardContent className="p-0">
                 <div className="flex flex-col md:flex-row gap-6">
-                  <div className="md:w-72 h-48 md:h-auto overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                    />
-                  </div>
+                  {item.image_url && (
+                    <div className="md:w-72 h-48 md:h-auto overflow-hidden">
+                      <img
+                        src={item.image_url}
+                        alt={item.title}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                  )}
                   <div className="flex-1 p-6 flex flex-col justify-center">
                     <h3 className="text-2xl font-bold text-serene-accent mb-3">
                       {item.title}
                     </h3>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
+                    <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+                      <Calendar className="h-4 w-4" />
+                      <span>{formatDate(item.created_at)}</span>
+                    </div>
+                    <p className="text-gray-300 mb-6 leading-relaxed line-clamp-2">
                       {item.description}
                     </p>
                     <Button
@@ -67,6 +108,17 @@ export const NewsSection = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        <div className="text-center mt-12">
+          <Button
+            size="lg"
+            onClick={() => navigate("/noticias")}
+            className="group"
+          >
+            Ver todas las noticias
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
         </div>
       </div>
     </section>
