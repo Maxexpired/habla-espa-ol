@@ -51,9 +51,9 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-serene-primary shadow-lg sticky top-[64px] sm:top-[70px] md:top-[76px] z-40 border-b border-serene-accent/40">
+    <nav className="bg-serene-primary shadow-lg sticky top-[72px] sm:top-[76px] md:top-[80px] z-40 border-b border-serene-accent/40">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-14 md:h-14">
+        <div className="flex items-center justify-between h-14">
           {/* Mobile Menu Toggle */}
           <Button
             variant="ghost"
@@ -70,7 +70,7 @@ export const Navbar = () => {
               <li key={item.label}>
                 <button
                   onClick={() => handleNavClick(item.href)}
-                  className="text-white font-semibold text-xs lg:text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth relative group"
+                  className="text-white font-semibold text-xs lg:text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth relative group py-2"
                 >
                   {item.label}
                   <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-serene-accent group-hover:w-full transition-all duration-300 shadow-glow" />
@@ -82,13 +82,13 @@ export const Navbar = () => {
 
         {/* Mobile Menu */}
         {isOpen && (
-          <div className="md:hidden pb-4 pt-2">
-            <ul className="flex flex-col gap-2 sm:gap-3">
+          <div className="md:hidden pb-4 pt-2 border-t border-white/10 mt-2">
+            <ul className="flex flex-col gap-2">
               {navItems.map((item) => (
                 <li key={item.label}>
                   <button
                     onClick={() => handleNavClick(item.href)}
-                    className="block text-white font-semibold text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth py-2 w-full text-left pl-2"
+                    className="block text-white font-semibold text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth py-3 px-4 w-full text-left rounded-lg hover:bg-white/10"
                   >
                     {item.label}
                   </button>
