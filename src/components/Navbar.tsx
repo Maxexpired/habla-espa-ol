@@ -51,14 +51,14 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-serene-dark shadow-md sticky top-[60px] sm:top-[68px] md:top-[72px] z-40 border-b border-serene-accent/30">
+    <nav className="bg-serene-primary shadow-md sticky top-[64px] sm:top-[70px] md:top-[76px] z-40 border-b border-white/10">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 md:h-14">
           {/* Mobile Menu Toggle */}
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-white hover:bg-white/10"
+            className="md:hidden text-white hover:bg-white/20"
             onClick={() => setIsOpen(!isOpen)}
           >
             {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -70,10 +70,10 @@ export const Navbar = () => {
               <li key={item.label}>
                 <button
                   onClick={() => handleNavClick(item.href)}
-                  className="text-white font-medium text-xs lg:text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth relative group"
+                  className="text-white font-medium text-xs lg:text-sm uppercase tracking-wider hover:text-white/80 transition-smooth relative group"
                 >
                   {item.label}
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-serene-accent group-hover:w-full transition-all duration-300" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-full transition-all duration-300" />
                 </button>
               </li>
             ))}
@@ -88,7 +88,7 @@ export const Navbar = () => {
                 <li key={item.label}>
                   <button
                     onClick={() => handleNavClick(item.href)}
-                    className="block text-white font-medium text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth py-2 w-full text-left pl-2"
+                    className="block text-white font-medium text-sm uppercase tracking-wider hover:text-white/80 transition-smooth py-2 w-full text-left pl-2"
                   >
                     {item.label}
                   </button>
