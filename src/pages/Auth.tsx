@@ -75,26 +75,35 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-serene-primary via-serene-secondary to-serene-accent p-4">
-      <Link to="/" className="absolute top-4 left-4">
-        <Button variant="ghost" size="icon">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-serene-primary via-serene-secondary to-serene-accent p-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 opacity-20">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-serene-accent rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-serene-secondary rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      </div>
+
+      <Link to="/" className="absolute top-4 left-4 z-10">
+        <Button variant="ghost" size="icon" className="hover:scale-110 transition-transform duration-200">
           <ArrowLeft className="h-5 w-5" />
         </Button>
       </Link>
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center">
+
+      <Card className="w-full max-w-md animate-fade-in relative z-10 backdrop-blur-sm bg-background/95 shadow-2xl border-border/50">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-serene-accent bg-clip-text text-transparent animate-scale-in">
             {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription className="text-center text-base">
             {isLogin ? "Ingresa a tu cuenta de Serene" : "Únete a la comunidad Serene"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-5">
             {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Nombre Completo</Label>
+              <div className="space-y-2 animate-fade-in">
+                <Label htmlFor="fullName" className="text-sm font-medium">
+                  Nombre Completo
+                </Label>
                 <Input
                   id="fullName"
                   type="text"
@@ -102,11 +111,14 @@ export default function Auth() {
                   onChange={(e) => setFullName(e.target.value)}
                   required={!isLogin}
                   placeholder="Juan Pérez"
+                  className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
                 />
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -114,10 +126,13 @@ export default function Auth() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 placeholder="tu@email.com"
+                className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password" className="text-sm font-medium">
+                Contraseña
+              </Label>
               <Input
                 id="password"
                 type="password"
@@ -125,15 +140,22 @@ export default function Auth() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 placeholder="••••••••"
+                className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Cargando..." : isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
+            <Button 
+              type="submit" 
+              className="w-full transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-95" 
+              disabled={loading}
+            >
+              <span className="flex items-center justify-center gap-2">
+                {loading ? "Cargando..." : isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
+              </span>
             </Button>
             <Button
               type="button"
               variant="ghost"
-              className="w-full"
+              className="w-full transition-all duration-200 hover:scale-[1.01] hover:bg-muted/50"
               onClick={() => setIsLogin(!isLogin)}
             >
               {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
