@@ -22,11 +22,11 @@ export const Header = () => {
         <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center button-hover">
+            <a href="/" className="flex items-center transition-transform duration-300 hover:scale-105">
               <img 
                 src={sereneLogo} 
                 alt="Serene Logo" 
-                className="h-12 sm:h-14 md:h-16 w-auto pulse-glow animate-float"
+                className="h-12 sm:h-14 md:h-16 w-auto drop-shadow-[0_0_15px_rgba(6,182,212,0.5)]"
               />
             </a>
           </div>
