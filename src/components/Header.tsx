@@ -17,11 +17,11 @@ export const Header = () => {
 
   return (
     <header className="bg-gradient-to-r from-serene-primary via-serene-secondary to-serene-primary sticky top-0 z-50 shadow-lg border-b border-serene-accent/20">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between py-4">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-3xl font-display font-bold text-white uppercase tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white uppercase tracking-tight">
               <a href="/" className="hover:opacity-90 transition-opacity">
                 Serene
               </a>
@@ -29,7 +29,7 @@ export const Header = () => {
           </div>
 
           {/* Search Bar */}
-          <form className="hidden md:flex items-center gap-2 flex-1 max-w-md mx-8">
+          <form className="hidden lg:flex items-center gap-2 flex-1 max-w-md mx-6 xl:mx-8">
             <div className="relative flex-1">
               <Input
                 type="search"

@@ -87,13 +87,13 @@ const team = [
 
 export const TeamSection = () => {
   return (
-    <section id="equipo" className="py-20 bg-gradient-to-b from-serene-dark to-gray-900 text-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+    <section id="equipo" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-serene-dark to-gray-900 text-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-10 sm:mb-12 md:mb-16">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold mb-3 sm:mb-4">
             Nuestro Equipo
           </h2>
-          <p className="text-lg text-gray-300">
+          <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto px-4">
             Conoce a las personas que hacen posible Serene
           </p>
         </div>
@@ -103,31 +103,31 @@ export const TeamSection = () => {
             align: "start",
             loop: true,
           }}
-          className="w-full max-w-7xl mx-auto relative px-12"
+          className="w-full max-w-7xl mx-auto relative px-8 sm:px-12"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
             {team.map((member, index) => (
               <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
                 <Card className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gray-800/50 border-gray-700">
-                  <CardContent className="p-6 text-center">
-                    <div className="mb-4 relative mx-auto w-32 h-32">
+                  <CardContent className="p-4 sm:p-6 text-center">
+                    <div className="mb-3 sm:mb-4 relative mx-auto w-24 h-24 sm:w-32 sm:h-32">
                       <img
                         src={member.image}
                         alt={member.name}
                         className="w-full h-full object-cover rounded-full border-4 border-serene-accent group-hover:border-serene-secondary transition-colors"
                       />
                     </div>
-                    <h3 className="text-lg font-bold text-white mb-1 group-hover:text-serene-accent transition-colors">
+                    <h3 className="text-base sm:text-lg font-bold text-white mb-1 group-hover:text-serene-accent transition-colors">
                       {member.name}
                     </h3>
-                    <p className="text-serene-accent font-medium text-sm">{member.role}</p>
+                    <p className="text-serene-accent font-medium text-xs sm:text-sm">{member.role}</p>
                   </CardContent>
                 </Card>
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 bg-serene-accent hover:bg-serene-secondary text-white border-none w-12 h-12 shadow-lg z-10" />
-          <CarouselNext className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 bg-serene-accent hover:bg-serene-secondary text-white border-none w-12 h-12 shadow-lg z-10" />
+          <CarouselPrevious className="absolute -left-3 sm:-left-4 md:-left-6 top-1/2 -translate-y-1/2 bg-serene-accent hover:bg-serene-secondary text-white border-none w-10 h-10 sm:w-12 sm:h-12 shadow-lg z-10" />
+          <CarouselNext className="absolute -right-3 sm:-right-4 md:-right-6 top-1/2 -translate-y-1/2 bg-serene-accent hover:bg-serene-secondary text-white border-none w-10 h-10 sm:w-12 sm:h-12 shadow-lg z-10" />
         </Carousel>
       </div>
     </section>
