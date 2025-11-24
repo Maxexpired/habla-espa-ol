@@ -17,16 +17,16 @@ export const Header = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="bg-gradient-to-r from-serene-dark via-serene-dark/95 to-serene-dark sticky top-0 z-50 shadow-xl border-b border-serene-accent/30">
+    <header className="gradient-hero sticky top-0 z-50 shadow-elegant border-b border-serene-accent/20 backdrop-blur-md">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <a href="/" className="flex items-center hover:scale-105 transition-transform">
+            <a href="/" className="flex items-center button-hover">
               <img 
                 src={sereneLogo} 
                 alt="Serene Logo" 
-                className="h-12 sm:h-14 md:h-16 w-auto drop-shadow-[0_0_15px_rgba(0,170,204,0.6)] hover:drop-shadow-[0_0_20px_rgba(0,170,204,0.8)] transition-all"
+                className="h-12 sm:h-14 md:h-16 w-auto pulse-glow animate-float"
               />
             </a>
           </div>
@@ -37,7 +37,7 @@ export const Header = () => {
               <Input
                 type="search"
                 placeholder="Buscar..."
-                className="bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/60 pr-10 focus-visible:ring-serene-accent focus-visible:border-serene-accent focus-visible:bg-white/15"
+                className="glass-effect border-white/20 text-white placeholder:text-white/60 pr-10 focus-visible:ring-serene-accent focus-visible:border-serene-accent transition-smooth"
               />
               <Button
                 type="submit"
@@ -63,7 +63,7 @@ export const Header = () => {
                     <User className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-card">
+                <DropdownMenuContent align="end" className="w-48 glass-effect backdrop-blur-lg border-white/20">
                   <DropdownMenuItem onClick={() => navigate("/perfil")}>
                     <UserCircle className="mr-2 h-4 w-4" />
                     Perfil
@@ -86,7 +86,7 @@ export const Header = () => {
               </DropdownMenu>
             ) : (
               <Button
-                className="bg-serene-accent hover:bg-serene-accent-light text-white font-medium transition-smooth shadow-glow"
+                className="button-hover shadow-glow"
                 onClick={() => navigate("/auth")}
               >
                 Iniciar Sesión
