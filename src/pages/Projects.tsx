@@ -4,6 +4,8 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Rocket } from "lucide-react";
 
 interface Project {
@@ -16,6 +18,7 @@ interface Project {
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
 
   useEffect(() => {
     fetchProjects();
@@ -57,7 +60,7 @@ export default function Projects() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {projects.map((project) => (
-              <Card key={project.id} className="hover:shadow-2xl transition-all duration-300 overflow-hidden group">
+              <Card key={project.id} className="hover:shadow-2xl transition-all duration-300 overflow-hidden group flex flex-col">
                 {project.image_url && (
                   <div className="relative h-64 overflow-hidden">
                     <img
@@ -74,15 +77,57 @@ export default function Projects() {
                     <CardTitle className="text-2xl">{project.title}</CardTitle>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-base leading-relaxed">
+                <CardContent className="flex-1 flex flex-col">
+                  <CardDescription className="text-base leading-relaxed line-clamp-3 mb-4">
                     {project.description}
                   </CardDescription>
+                  <Button 
+                    onClick={() => setSelectedProject(project)}
+                    className="mt-auto"
+                  >
+                    Ver detalles
+                  </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Modal de detalles del proyecto */}
+        <Dialog open={!!selectedProject} onOpenChange={() => setSelectedProject(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            {selectedProject && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-3xl flex items-center gap-3">
+                    <Rocket className="h-8 w-8 text-serene-primary" />
+                    {selectedProject.title}
+                  </DialogTitle>
+                  <DialogDescription>Detalles completos del proyecto</DialogDescription>
+                </DialogHeader>
+                
+                {selectedProject.image_url && (
+                  <div className="relative h-96 rounded-lg overflow-hidden">
+                    <img
+                      src={selectedProject.image_url}
+                      alt={selectedProject.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Descripción del Proyecto:</h3>
+                    <div className="prose prose-sm max-w-none whitespace-pre-line text-muted-foreground leading-relaxed">
+                      {selectedProject.description}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>
