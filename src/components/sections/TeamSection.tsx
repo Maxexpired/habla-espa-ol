@@ -1,4 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const team = [
   {
@@ -91,28 +98,37 @@ export const TeamSection = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-          {team.map((member, index) => (
-            <Card
-              key={index}
-              className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gray-800/50 border-gray-700"
-            >
-              <CardContent className="p-6 text-center">
-                <div className="mb-4 relative mx-auto w-32 h-32">
-                  <img
-                    src={member.image}
-                    alt={member.name}
-                    className="w-full h-full object-cover rounded-full border-4 border-serene-accent group-hover:border-serene-secondary transition-colors"
-                  />
-                </div>
-                <h3 className="text-lg font-bold text-white mb-1 group-hover:text-serene-accent transition-colors">
-                  {member.name}
-                </h3>
-                <p className="text-serene-accent font-medium text-sm">{member.role}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          className="w-full max-w-7xl mx-auto"
+        >
+          <CarouselContent className="-ml-2 md:-ml-4">
+            {team.map((member, index) => (
+              <CarouselItem key={index} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                <Card className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-gray-800/50 border-gray-700">
+                  <CardContent className="p-6 text-center">
+                    <div className="mb-4 relative mx-auto w-32 h-32">
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-full h-full object-cover rounded-full border-4 border-serene-accent group-hover:border-serene-secondary transition-colors"
+                      />
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1 group-hover:text-serene-accent transition-colors">
+                      {member.name}
+                    </h3>
+                    <p className="text-serene-accent font-medium text-sm">{member.role}</p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-12 bg-serene-accent hover:bg-serene-secondary text-white border-none" />
+          <CarouselNext className="hidden md:flex -right-12 bg-serene-accent hover:bg-serene-secondary text-white border-none" />
+        </Carousel>
       </div>
     </section>
   );
