@@ -35,18 +35,19 @@ export default function MyCourses() {
   const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
   const [certificates, setCertificates] = useState<Record<string, Certificate>>({});
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       navigate("/auth");
       return;
     }
     fetchEnrollments();
     fetchCertificates();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchEnrollments = async () => {
     if (!user) return;
