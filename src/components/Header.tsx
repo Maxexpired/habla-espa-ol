@@ -1,4 +1,4 @@
-import { Search, User, LogOut, Shield } from "lucide-react";
+import { Search, User, LogOut, Shield, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/useAuth";
@@ -60,16 +60,21 @@ export const Header = () => {
                     <User className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate("/perfil")}>
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    Perfil
+                  </DropdownMenuItem>
                   {isAdmin && (
                     <>
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => navigate("/dashboard")}>
                         <Shield className="mr-2 h-4 w-4" />
-                        Dashboard Admin
+                        Dashboard
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
                     </>
                   )}
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={signOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Cerrar Sesión
