@@ -14,7 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Poppins', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Sora', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -56,6 +57,7 @@ export default {
           dark: "hsl(var(--serene-dark))",
           light: "hsl(var(--serene-light))",
           accent: "hsl(var(--serene-accent))",
+          'accent-light': "hsl(var(--serene-accent-light))",
         },
       },
       borderRadius: {
