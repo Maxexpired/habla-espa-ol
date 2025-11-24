@@ -60,6 +60,29 @@ export default function Profile() {
     if (!user || !e.target.files || e.target.files.length === 0) return;
 
     const file = e.target.files[0];
+    
+    // Validación de tipo de archivo
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Tipo de archivo no válido",
+        description: "Solo se permiten imágenes JPG, PNG o WEBP",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validación de tamaño (máximo 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB en bytes
+    if (file.size > maxSize) {
+      toast({
+        title: "Archivo muy grande",
+        description: "La imagen no puede superar los 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const fileExt = file.name.split('.').pop();
     const fileName = `${user.id}/${Math.random()}.${fileExt}`;
 
@@ -175,7 +198,7 @@ export default function Profile() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
                 className="hidden"
                 onChange={handleAvatarUpload}
               />
