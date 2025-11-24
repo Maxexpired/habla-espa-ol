@@ -7,9 +7,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle } from "lucide-react";
+import { BookOpen, CheckCircle, Play, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface Course {
   id: string;
@@ -28,6 +29,7 @@ export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -135,51 +137,184 @@ export default function Courses() {
             <p className="text-gray-600">No hay cursos disponibles en este momento.</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             {courses.map((course) => (
-              <Card key={course.id} className="hover:shadow-xl transition-all duration-300">
+              <Card key={course.id} className="hover:shadow-2xl transition-all duration-300 overflow-hidden group">
                 {course.image_url && (
-                  <div className="h-48 overflow-hidden">
+                  <div className="relative h-64 overflow-hidden">
                     <img
                       src={course.image_url}
                       alt={course.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setSelectedCourse(course)}
+                    >
+                      <Play className="h-8 w-8" />
+                    </Button>
                   </div>
                 )}
                 <CardHeader>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BookOpen className="h-5 w-5 text-serene-primary" />
-                    <CardTitle className="text-xl">{course.title}</CardTitle>
+                  <div className="flex items-start justify-between gap-4 mb-2">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-5 w-5 text-serene-primary flex-shrink-0" />
+                      <CardTitle className="text-xl">{course.title}</CardTitle>
+                    </div>
                   </div>
-                  <CardDescription>{course.description}</CardDescription>
+                  <CardDescription className="line-clamp-2">
+                    {course.description.split('\n')[0]}
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
-                    {course.topics.map((topic, idx) => (
-                      <Badge key={idx} variant="secondary">
+                    {course.topics.slice(0, 4).map((topic, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
                         {topic}
                       </Badge>
                     ))}
+                    {course.topics.length > 4 && (
+                      <Badge variant="outline" className="text-xs">
+                        +{course.topics.length - 4} más
+                      </Badge>
+                    )}
                   </div>
-                  {user && isEnrolled(course.id) ? (
-                    <Button className="w-full" disabled>
-                      <CheckCircle className="mr-2 h-4 w-4" />
-                      Ya inscrito
-                    </Button>
-                  ) : (
-                    <Button
-                      className="w-full"
-                      onClick={() => handleEnroll(course.id)}
-                    >
-                      Inscribirse al curso
-                    </Button>
-                  )}
+                  
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setSelectedCourse(course)}
+                  >
+                    Ver detalles del curso
+                  </Button>
+
+                  <div className="flex gap-2">
+                    {user && isEnrolled(course.id) ? (
+                      <Button className="flex-1" disabled>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Ya inscrito
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          className="flex-1"
+                          onClick={() => handleEnroll(course.id)}
+                        >
+                          Inscribirse Gratis
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          className="flex-1"
+                          onClick={() => {
+                            toast({
+                              title: "Próximamente",
+                              description: "La opción de compra estará disponible pronto",
+                            });
+                          }}
+                        >
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          Comprar Certificado
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Modal de detalles del curso */}
+        <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            {selectedCourse && (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl">{selectedCourse.title}</DialogTitle>
+                  <DialogDescription>Detalles completos del curso</DialogDescription>
+                </DialogHeader>
+                
+                {selectedCourse.image_url && (
+                  <div className="relative h-64 rounded-lg overflow-hidden">
+                    <img
+                      src={selectedCourse.image_url}
+                      alt={selectedCourse.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                      <Button
+                        size="lg"
+                        variant="secondary"
+                        className="rounded-full w-20 h-20"
+                      >
+                        <Play className="h-10 w-10" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Temas del curso:</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedCourse.topics.map((topic, idx) => (
+                        <Badge key={idx} variant="secondary">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Descripción:</h3>
+                    <div className="prose prose-sm max-w-none whitespace-pre-line text-muted-foreground">
+                      {selectedCourse.description}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-4">
+                    {user && isEnrolled(selectedCourse.id) ? (
+                      <Button className="flex-1" size="lg" disabled>
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Ya inscrito
+                      </Button>
+                    ) : (
+                      <>
+                        <Button
+                          className="flex-1"
+                          size="lg"
+                          onClick={() => {
+                            handleEnroll(selectedCourse.id);
+                            setSelectedCourse(null);
+                          }}
+                        >
+                          Inscribirse Gratis
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          className="flex-1"
+                          size="lg"
+                          onClick={() => {
+                            toast({
+                              title: "Próximamente",
+                              description: "La opción de compra estará disponible pronto",
+                            });
+                          }}
+                        >
+                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          Comprar Certificado
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
       <Footer />
     </div>
