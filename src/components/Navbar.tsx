@@ -51,7 +51,7 @@ export const Navbar = () => {
   };
 
   return (
-    <nav className="bg-serene-primary shadow-md sticky top-[72px] z-40">
+    <nav className="bg-serene-dark shadow-md sticky top-[72px] z-40 border-b border-serene-accent/30">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 md:h-14">
           {/* Mobile Menu Toggle */}
@@ -70,10 +70,10 @@ export const Navbar = () => {
               <li key={item.label}>
                 <button
                   onClick={() => handleNavClick(item.href)}
-                  className="text-white font-semibold text-sm uppercase tracking-wide hover:text-accent transition-colors relative group"
+                  className="text-white font-medium text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth relative group"
                 >
                   {item.label}
-                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-white group-hover:w-6 transition-all duration-300" />
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-serene-accent group-hover:w-full transition-all duration-300" />
                 </button>
               </li>
             ))}
@@ -88,7 +88,7 @@ export const Navbar = () => {
                 <li key={item.label}>
                   <button
                     onClick={() => handleNavClick(item.href)}
-                    className="block text-white font-semibold text-sm uppercase tracking-wide hover:text-accent transition-colors py-2 w-full text-left"
+                    className="block text-white font-medium text-sm uppercase tracking-wider hover:text-serene-accent transition-smooth py-2 w-full text-left"
                   >
                     {item.label}
                   </button>

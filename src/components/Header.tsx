@@ -16,12 +16,12 @@ export const Header = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="bg-serene-secondary sticky top-0 z-50 shadow-lg">
+    <header className="bg-gradient-to-r from-serene-primary via-serene-secondary to-serene-primary sticky top-0 z-50 shadow-lg border-b border-serene-accent/20">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-3xl font-bold text-white uppercase tracking-tight">
+            <h1 className="text-3xl font-display font-bold text-white uppercase tracking-tight">
               <a href="/" className="hover:opacity-90 transition-opacity">
                 Serene
               </a>
@@ -34,7 +34,7 @@ export const Header = () => {
               <Input
                 type="search"
                 placeholder="Buscar..."
-                className="bg-white/90 border-0 pr-10 focus-visible:ring-serene-primary"
+                className="bg-white/95 border-0 pr-10 focus-visible:ring-serene-accent shadow-sm"
               />
               <Button
                 type="submit"
@@ -55,12 +55,12 @@ export const Header = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-white hover:bg-white/10"
+                    className="text-white hover:bg-white/10 transition-smooth"
                   >
                     <User className="h-6 w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-48 bg-card">
                   <DropdownMenuItem onClick={() => navigate("/perfil")}>
                     <UserCircle className="mr-2 h-4 w-4" />
                     Perfil
@@ -84,7 +84,7 @@ export const Header = () => {
             ) : (
               <Button
                 variant="ghost"
-                className="text-white hover:bg-white/10"
+                className="text-white hover:bg-white/10 font-medium transition-smooth"
                 onClick={() => navigate("/auth")}
               >
                 Iniciar Sesión
