@@ -7,10 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, Play, ShoppingCart } from "lucide-react";
+import { BookOpen, CheckCircle, Play, ShoppingCart, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CourseReviews } from "@/components/CourseReviews";
 
 interface Course {
   id: string;
@@ -18,6 +20,8 @@ interface Course {
   description: string;
   topics: string[];
   image_url: string | null;
+  average_rating?: number;
+  reviews_count?: number;
 }
 
 interface Enrollment {
@@ -49,7 +53,25 @@ export default function Courses() {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      setCourses(data);
+      // Fetch ratings for each course
+      const coursesWithRatings = await Promise.all(
+        data.map(async (course) => {
+          const { data: avgData } = await supabase.rpc("get_course_average_rating", {
+            course_uuid: course.id,
+          });
+          const { data: countData } = await supabase.rpc("get_course_reviews_count", {
+            course_uuid: course.id,
+          });
+          
+          return {
+            ...course,
+            average_rating: avgData || 0,
+            reviews_count: countData || 0,
+          };
+        })
+      );
+      
+      setCourses(coursesWithRatings);
     }
     setLoading(false);
   };
@@ -165,6 +187,17 @@ export default function Courses() {
                       <CardTitle className="text-xl">{course.title}</CardTitle>
                     </div>
                   </div>
+                  {course.reviews_count > 0 && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold">{course.average_rating.toFixed(1)}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        ({course.reviews_count} {course.reviews_count === 1 ? "reseña" : "reseñas"})
+                      </span>
+                    </div>
+                  )}
                   <CardDescription className="line-clamp-2">
                     {course.description.split('\n')[0]}
                   </CardDescription>
@@ -229,88 +262,114 @@ export default function Courses() {
 
         {/* Modal de detalles del curso */}
         <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             {selectedCourse && (
               <>
                 <DialogHeader>
                   <DialogTitle className="text-2xl">{selectedCourse.title}</DialogTitle>
-                  <DialogDescription>Detalles completos del curso</DialogDescription>
+                  <DialogDescription>
+                    Detalles completos del curso
+                    {selectedCourse.reviews_count > 0 && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-semibold">{selectedCourse.average_rating.toFixed(1)}</span>
+                        </div>
+                        <span className="text-xs">
+                          ({selectedCourse.reviews_count} {selectedCourse.reviews_count === 1 ? "reseña" : "reseñas"})
+                        </span>
+                      </div>
+                    )}
+                  </DialogDescription>
                 </DialogHeader>
                 
-                {selectedCourse.image_url && (
-                  <div className="relative h-64 rounded-lg overflow-hidden">
-                    <img
-                      src={selectedCourse.image_url}
-                      alt={selectedCourse.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                      <Button
-                        size="lg"
-                        variant="secondary"
-                        className="rounded-full w-20 h-20"
-                      >
-                        <Play className="h-10 w-10" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <Tabs defaultValue="details" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="details">Detalles del Curso</TabsTrigger>
+                    <TabsTrigger value="reviews">Reseñas</TabsTrigger>
+                  </TabsList>
 
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Temas del curso:</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedCourse.topics.map((topic, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          {topic}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold mb-2">Descripción:</h3>
-                    <div className="prose prose-sm max-w-none whitespace-pre-line text-muted-foreground">
-                      {selectedCourse.description}
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2 pt-4">
-                    {user && isEnrolled(selectedCourse.id) ? (
-                      <Button className="flex-1" size="lg" disabled>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Ya inscrito
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          className="flex-1"
-                          size="lg"
-                          onClick={() => {
-                            handleEnroll(selectedCourse.id);
-                            setSelectedCourse(null);
-                          }}
-                        >
-                          Inscribirse Gratis
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          className="flex-1"
-                          size="lg"
-                          onClick={() => {
-                            toast({
-                              title: "Próximamente",
-                              description: "La opción de compra estará disponible pronto",
-                            });
-                          }}
-                        >
-                          <ShoppingCart className="mr-2 h-4 w-4" />
-                          Comprar Certificado
-                        </Button>
-                      </>
+                  <TabsContent value="details" className="space-y-4">
+                    {selectedCourse.image_url && (
+                      <div className="relative h-64 rounded-lg overflow-hidden">
+                        <img
+                          src={selectedCourse.image_url}
+                          alt={selectedCourse.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Button
+                            size="lg"
+                            variant="secondary"
+                            className="rounded-full w-20 h-20"
+                          >
+                            <Play className="h-10 w-10" />
+                          </Button>
+                        </div>
+                      </div>
                     )}
-                  </div>
-                </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Temas del curso:</h3>
+                        <div className="flex flex-wrap gap-2">
+                          {selectedCourse.topics.map((topic, idx) => (
+                            <Badge key={idx} variant="secondary">
+                              {topic}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-semibold mb-2">Descripción:</h3>
+                        <div className="prose prose-sm max-w-none whitespace-pre-line text-muted-foreground">
+                          {selectedCourse.description}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 pt-4">
+                        {user && isEnrolled(selectedCourse.id) ? (
+                          <Button className="flex-1" size="lg" disabled>
+                            <CheckCircle className="mr-2 h-4 w-4" />
+                            Ya inscrito
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              className="flex-1"
+                              size="lg"
+                              onClick={() => {
+                                handleEnroll(selectedCourse.id);
+                                setSelectedCourse(null);
+                              }}
+                            >
+                              Inscribirse Gratis
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              className="flex-1"
+                              size="lg"
+                              onClick={() => {
+                                toast({
+                                  title: "Próximamente",
+                                  description: "La opción de compra estará disponible pronto",
+                                });
+                              }}
+                            >
+                              <ShoppingCart className="mr-2 h-4 w-4" />
+                              Comprar Certificado
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="reviews">
+                    <CourseReviews courseId={selectedCourse.id} />
+                  </TabsContent>
+                </Tabs>
               </>
             )}
           </DialogContent>
