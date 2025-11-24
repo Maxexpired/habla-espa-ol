@@ -17,7 +17,7 @@ export const Header = () => {
   const navigate = useNavigate();
 
   return (
-    <header className="bg-white sticky top-0 z-50 shadow-md border-b border-gray-200">
+    <header className="bg-gradient-to-r from-serene-dark via-serene-dark/95 to-serene-dark sticky top-0 z-50 shadow-xl border-b border-serene-accent/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Logo */}
@@ -26,7 +26,7 @@ export const Header = () => {
               <img 
                 src={sereneLogo} 
                 alt="Serene Logo" 
-                className="h-12 sm:h-14 md:h-16 w-auto"
+                className="h-12 sm:h-14 md:h-16 w-auto drop-shadow-[0_0_15px_rgba(0,170,204,0.6)] hover:drop-shadow-[0_0_20px_rgba(0,170,204,0.8)] transition-all"
               />
             </a>
           </div>
@@ -37,7 +37,7 @@ export const Header = () => {
               <Input
                 type="search"
                 placeholder="Buscar..."
-                className="bg-gray-50 border border-gray-200 pr-10 focus-visible:ring-serene-primary focus-visible:border-serene-primary"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/60 pr-10 focus-visible:ring-serene-accent focus-visible:border-serene-accent focus-visible:bg-white/15"
               />
               <Button
                 type="submit"
@@ -45,7 +45,7 @@ export const Header = () => {
                 variant="ghost"
                 className="absolute right-0 top-0 h-full hover:bg-transparent"
               >
-                <Search className="h-5 w-5 text-serene-primary" />
+                <Search className="h-5 w-5 text-serene-accent" />
               </Button>
             </div>
           </form>
@@ -58,7 +58,7 @@ export const Header = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-serene-primary hover:bg-serene-primary/10 transition-smooth"
+                    className="text-white hover:bg-white/10 transition-smooth"
                   >
                     <User className="h-6 w-6" />
                   </Button>
@@ -86,7 +86,7 @@ export const Header = () => {
               </DropdownMenu>
             ) : (
               <Button
-                className="bg-serene-primary hover:bg-serene-secondary text-white font-medium transition-smooth"
+                className="bg-serene-accent hover:bg-serene-accent-light text-white font-medium transition-smooth shadow-glow"
                 onClick={() => navigate("/auth")}
               >
                 Iniciar Sesión
