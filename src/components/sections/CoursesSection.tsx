@@ -82,8 +82,8 @@ export const CoursesSection = () => {
                 style={{ animationDelay: `${index * 100}ms` }}
               >
                 <CardContent className="p-6 sm:p-8 text-center relative z-10">
-                  <div className="mb-4 sm:mb-6 inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-accent shadow-glow group-hover:scale-110 transition-transform">
-                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-white" />
+                  <div className="mb-4 sm:mb-6 inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-serene-accent shadow-glow group-hover:scale-110 transition-transform group-hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]">
+                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-serene-dark drop-shadow-lg" strokeWidth={2.5} />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4 gradient-text-hover px-2">
                     {course.title}
