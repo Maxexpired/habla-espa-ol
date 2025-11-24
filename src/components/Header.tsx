@@ -10,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import sereneLogo from "@/assets/serene-logo.png";
 
 export const Header = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -21,11 +22,13 @@ export const Header = () => {
         <div className="flex items-center justify-between py-3 sm:py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-white uppercase tracking-tight">
-              <a href="/" className="hover:opacity-90 transition-opacity">
-                Serene
-              </a>
-            </h1>
+            <a href="/" className="flex items-center hover:opacity-90 transition-opacity">
+              <img 
+                src={sereneLogo} 
+                alt="Serene Logo" 
+                className="h-10 sm:h-12 md:h-14 w-auto"
+              />
+            </a>
           </div>
 
           {/* Search Bar */}

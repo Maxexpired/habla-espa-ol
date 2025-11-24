@@ -56,7 +56,7 @@ export const NewsSection = () => {
   }
 
   return (
-    <section id="noticias" className="py-12 sm:py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white">
+    <section id="noticias" className="py-12 sm:py-16 md:py-20 gradient-subtle">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10 sm:mb-12 md:mb-16">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-foreground mb-3 sm:mb-4">
