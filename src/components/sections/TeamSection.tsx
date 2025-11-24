@@ -103,7 +103,7 @@ export const TeamSection = () => {
             align: "start",
             loop: true,
           }}
-          className="w-full max-w-7xl mx-auto"
+          className="w-full max-w-7xl mx-auto relative px-12"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
             {team.map((member, index) => (
@@ -126,8 +126,8 @@ export const TeamSection = () => {
               </CarouselItem>
             ))}
           </CarouselContent>
-          <CarouselPrevious className="hidden md:flex -left-12 bg-serene-accent hover:bg-serene-secondary text-white border-none" />
-          <CarouselNext className="hidden md:flex -right-12 bg-serene-accent hover:bg-serene-secondary text-white border-none" />
+          <CarouselPrevious className="absolute -left-4 md:-left-6 top-1/2 -translate-y-1/2 bg-serene-accent hover:bg-serene-secondary text-white border-none w-12 h-12 shadow-lg z-10" />
+          <CarouselNext className="absolute -right-4 md:-right-6 top-1/2 -translate-y-1/2 bg-serene-accent hover:bg-serene-secondary text-white border-none w-12 h-12 shadow-lg z-10" />
         </Carousel>
       </div>
     </section>
