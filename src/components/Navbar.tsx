@@ -10,7 +10,7 @@ const navItems = [
   { label: "Proyectos", href: "/proyectos" },
   { label: "Noticias", href: "/noticias" },
   { label: "FAQ", href: "/faq" },
-  { label: "Contacto", href: "#contacto" },
+  { label: "Contacto", href: "/contacto" },
 ];
 
 export const Navbar = () => {
@@ -21,22 +21,8 @@ export const Navbar = () => {
   const handleNavClick = (href: string) => {
     setIsOpen(false);
     
-    // Si es el enlace de contacto
-    if (href === "#contacto") {
-      // Si ya estamos en la página principal, solo hacer scroll
-      if (location.pathname === "/") {
-        const element = document.getElementById("contacto");
-        element?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        // Si estamos en otra página, navegar a home y luego hacer scroll
-        navigate("/");
-        setTimeout(() => {
-          const element = document.getElementById("contacto");
-          element?.scrollIntoView({ behavior: "smooth" });
-        }, 100);
-      }
-    } else if (href.startsWith("#")) {
-      // Para otros enlaces con hash, navegar primero a home
+    if (href.startsWith("#")) {
+      // Para enlaces con hash, navegar primero a home
       if (location.pathname !== "/") {
         navigate("/");
       }
