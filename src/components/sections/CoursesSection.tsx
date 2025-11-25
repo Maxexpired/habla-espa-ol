@@ -77,24 +77,35 @@ export const CoursesSection = () => {
             return (
               <Card
                 key={course.id}
-                className="group card-hover cursor-pointer border-0 gradient-card overflow-hidden shine-effect backdrop-blur-sm"
+                className="group cursor-pointer border border-border/50 bg-card overflow-hidden rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_12px_40px_rgb(0,0,0,0.18)] transition-all duration-300 hover:-translate-y-2 animate-fade-in"
                 onClick={() => navigate("/cursos")}
                 style={{ animationDelay: `${index * 100}ms` }}
               >
-                <CardContent className="p-6 sm:p-8 text-center relative z-10">
-                  <div className="mb-4 sm:mb-6 inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-serene-accent shadow-glow group-hover:scale-110 transition-transform group-hover:shadow-[0_0_30px_rgba(6,182,212,0.6)]">
-                    <Icon className="h-8 w-8 sm:h-10 sm:w-10 text-serene-dark drop-shadow-lg" strokeWidth={2.5} />
+                {course.image_url ? (
+                  <div className="relative w-full h-48 sm:h-56 overflow-hidden bg-muted">
+                    <img 
+                      src={course.image_url} 
+                      alt={course.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
-                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-3 sm:mb-4 gradient-text-hover px-2">
+                ) : (
+                  <div className="relative w-full h-48 sm:h-56 bg-gradient-to-br from-serene-accent/20 to-serene-primary/20 flex items-center justify-center">
+                    <div className="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-serene-accent/90 shadow-glow group-hover:scale-110 transition-transform">
+                      <Icon className="h-10 w-10 sm:h-12 sm:w-12 text-white drop-shadow-lg" strokeWidth={2.5} />
+                    </div>
+                  </div>
+                )}
+                <CardContent className="p-5 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-bold text-foreground mb-3 group-hover:text-serene-accent transition-colors">
                     {course.title}
                   </h3>
-                  <div className="w-12 sm:w-16 h-1 bg-gradient-accent mx-auto mb-3 sm:mb-4 rounded-full" />
-                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed line-clamp-3 mb-4 px-2">
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed line-clamp-3 mb-4">
                     {course.description.split('\n')[0]}
                   </p>
-                  <div className="flex flex-wrap gap-1.5 sm:gap-2 justify-center">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {course.topics.slice(0, 3).map((topic, idx) => (
-                      <Badge key={idx} variant="outline" className="text-xs border-serene-accent/30 bg-serene-accent/5">
+                      <Badge key={idx} variant="outline" className="text-xs border-serene-accent/30 bg-serene-accent/5 hover:bg-serene-accent/10 transition-colors">
                         {topic}
                       </Badge>
                     ))}
