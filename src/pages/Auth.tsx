@@ -83,8 +83,9 @@ export default function Auth() {
       </div>
 
       <Link to="/" className="absolute top-4 left-4 z-10">
-        <Button variant="ghost" size="icon" className="hover:scale-110 transition-transform duration-200">
-          <ArrowLeft className="h-5 w-5" />
+        <Button variant="outline" className="hover:scale-105 transition-all duration-200 backdrop-blur-sm bg-background/80 border-serene-accent/30 hover:border-serene-accent hover:bg-serene-accent/10">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Atrás
         </Button>
       </Link>
 
