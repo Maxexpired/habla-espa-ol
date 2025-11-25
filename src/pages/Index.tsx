@@ -11,7 +11,7 @@ import { Chatbot } from "@/components/Chatbot";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen gradient-soft">
       <Header />
       <Navbar />
       <main>

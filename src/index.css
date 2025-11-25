@@ -47,12 +47,14 @@
     --serene-accent-dark: 193 100% 32%;
 
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(216 50% 8%) 0%, hsl(215 28% 17%) 50%, hsl(193 100% 32% / 0.2) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(193 100% 40%) 0%, hsl(193 100% 60%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 15% 95% / 0.5) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(216 50% 8%) 0%, hsl(215 28% 17%) 30%, hsl(193 100% 32%) 70%, hsl(193 100% 60%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(193 100% 98%) 0%, hsl(210 40% 98%) 50%, hsl(193 100% 96%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(193 100% 40%) 0%, hsl(193 100% 60%) 50%, hsl(280 100% 70%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(193 100% 98%) 0%, hsl(210 15% 95%) 50%, hsl(280 100% 98%) 100%);
     --gradient-shine: linear-gradient(110deg, transparent 25%, hsl(193 100% 40% / 0.1) 50%, transparent 75%);
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.1) 0%, hsl(0 0% 100% / 0.05) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(193 100% 40% / 0.1) 0%, hsl(280 100% 70% / 0.05) 100%);
+    --gradient-vibrant: linear-gradient(135deg, hsl(193 100% 50%) 0%, hsl(280 100% 70%) 50%, hsl(340 100% 70%) 100%);
+    --gradient-soft: linear-gradient(180deg, hsl(193 100% 95%) 0%, hsl(210 40% 98%) 50%, hsl(280 100% 95%) 100%);
 
     /* Shadows */
     --shadow-glow: 0 0 40px hsl(193 100% 40% / 0.6), 0 0 80px hsl(193 100% 40% / 0.3);
@@ -106,12 +108,14 @@
     --serene-accent-dark: 193 100% 32%;
 
     /* Gradients - dark mode */
-    --gradient-hero: linear-gradient(135deg, hsl(216 50% 8%) 0%, hsl(215 28% 17%) 50%, hsl(193 100% 32% / 0.3) 100%);
-    --gradient-card: linear-gradient(145deg, hsl(215 28% 17%) 0%, hsl(215 25% 20%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(193 100% 50%) 0%, hsl(193 100% 70%) 100%);
-    --gradient-subtle: linear-gradient(180deg, hsl(216 50% 8%) 0%, hsl(215 25% 20% / 0.5) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(216 50% 8%) 0%, hsl(215 28% 17%) 30%, hsl(193 100% 32%) 70%, hsl(193 100% 50%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(215 28% 17%) 0%, hsl(215 25% 20%) 50%, hsl(193 100% 15%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(193 100% 50%) 0%, hsl(193 100% 70%) 50%, hsl(280 100% 70%) 100%);
+    --gradient-subtle: linear-gradient(180deg, hsl(216 50% 8%) 0%, hsl(215 25% 20%) 50%, hsl(280 50% 15%) 100%);
     --gradient-shine: linear-gradient(110deg, transparent 25%, hsl(193 100% 50% / 0.15) 50%, transparent 75%);
-    --gradient-glass: linear-gradient(135deg, hsl(0 0% 100% / 0.05) 0%, hsl(0 0% 100% / 0.02) 100%);
+    --gradient-glass: linear-gradient(135deg, hsl(193 100% 50% / 0.1) 0%, hsl(280 100% 70% / 0.05) 100%);
+    --gradient-vibrant: linear-gradient(135deg, hsl(193 100% 60%) 0%, hsl(280 100% 70%) 50%, hsl(340 100% 70%) 100%);
+    --gradient-soft: linear-gradient(180deg, hsl(216 50% 12%) 0%, hsl(215 25% 20%) 50%, hsl(280 50% 15%) 100%);
 
     /* Shadows - dark mode */
     --shadow-glow: 0 0 50px hsl(193 100% 50% / 0.8), 0 0 100px hsl(193 100% 50% / 0.4);
@@ -156,6 +160,14 @@
   
   .gradient-accent {
     background: var(--gradient-accent);
+  }
+
+  .gradient-vibrant {
+    background: var(--gradient-vibrant);
+  }
+
+  .gradient-soft {
+    background: var(--gradient-soft);
   }
 
   .gradient-glass {
