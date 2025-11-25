@@ -44,7 +44,7 @@ const team = [
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop",
   },
   {
-    name: "Dominique (RUBY)",
+    name: "Dominique Pincheira",
     role: "Diseñadora UX/UI",
     image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
   },
