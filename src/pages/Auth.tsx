@@ -75,7 +75,7 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-white from-10% via-serene-accent/40 via-50% to-serene-primary to-90% p-4 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-serene-secondary via-serene-accent/40 to-serene-primary p-4 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-20 left-20 w-72 h-72 bg-serene-accent rounded-full blur-3xl animate-pulse" />
