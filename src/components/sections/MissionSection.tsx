@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const MissionSection = () => {
   return (
-    <section id="mision" className="py-12 sm:py-16 md:py-24 bg-background relative overflow-hidden">
+    <section id="mision" className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-serene-accent/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-serene-accent-light/10 rounded-full blur-3xl" />

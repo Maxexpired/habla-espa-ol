@@ -54,7 +54,7 @@ export const CoursesSection = () => {
   }
 
   return (
-    <section id="cursos" className="py-12 sm:py-16 md:py-24 gradient-subtle relative overflow-hidden">
+    <section id="cursos" className="py-12 sm:py-16 md:py-24 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 bg-grid-pattern opacity-5" />
       
