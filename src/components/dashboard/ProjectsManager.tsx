@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { ImageUploadField } from "@/components/dashboard/ImageUploadField";
 
 interface Project {
   id: string;
