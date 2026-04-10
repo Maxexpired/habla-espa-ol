@@ -9,6 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/components/ui/use-toast";
 import { Plus, Trash2, Edit } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useImageUpload } from "@/hooks/useImageUpload";
+import { ImageUploadField } from "@/components/dashboard/ImageUploadField";
 
 interface News {
   id: string;
@@ -28,6 +30,7 @@ export const NewsManager = () => {
     published: false,
   });
   const { toast } = useToast();
+  const { uploadImage, uploading } = useImageUpload("news-images");
 
   useEffect(() => {
     fetchNews();
@@ -128,16 +131,20 @@ export const NewsManager = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="image_url">URL de Imagen</Label>
-              <Input
-                id="image_url"
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
+            <ImageUploadField
+              label="Imagen"
+              imageUrl={formData.image_url}
+              uploading={uploading}
+              onFileSelect={async (file) => {
+                try {
+                  const url = await uploadImage(file);
+                  if (url) setFormData({ ...formData, image_url: url });
+                } catch {
+                  toast({ title: "Error al subir imagen", variant: "destructive" });
+                }
+              }}
+              onClear={() => setFormData({ ...formData, image_url: "" })}
+            />
             <div className="flex items-center space-x-2">
               <Switch
                 id="published"
