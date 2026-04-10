@@ -30,6 +30,7 @@ export const ProjectsManager = () => {
     published: false,
   });
   const { toast } = useToast();
+  const { uploadImage, uploading } = useImageUpload("project-images");
 
   useEffect(() => {
     fetchProjects();
@@ -130,16 +131,20 @@ export const ProjectsManager = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="image_url">URL de Imagen</Label>
-              <Input
-                id="image_url"
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                placeholder="https://..."
-              />
-            </div>
+            <ImageUploadField
+              label="Imagen"
+              imageUrl={formData.image_url}
+              uploading={uploading}
+              onFileSelect={async (file) => {
+                try {
+                  const url = await uploadImage(file);
+                  if (url) setFormData({ ...formData, image_url: url });
+                } catch {
+                  toast({ title: "Error al subir imagen", variant: "destructive" });
+                }
+              }}
+              onClear={() => setFormData({ ...formData, image_url: "" })}
+            />
             <div className="flex items-center space-x-2">
               <Switch
                 id="published"
