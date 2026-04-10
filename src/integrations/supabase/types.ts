@@ -228,6 +228,56 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          amount: number
+          course_id: string
+          created_at: string
+          currency: string
+          id: string
+          mercadopago_payment_id: string | null
+          mercadopago_preference_id: string | null
+          mercadopago_status: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          course_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          mercadopago_payment_id?: string | null
+          mercadopago_preference_id?: string | null
+          mercadopago_status?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          course_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          mercadopago_payment_id?: string | null
+          mercadopago_preference_id?: string | null
+          mercadopago_status?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
