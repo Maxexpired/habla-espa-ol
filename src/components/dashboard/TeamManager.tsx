@@ -86,8 +86,7 @@ export const TeamManager = () => {
   const handleEdit = (member: TeamMember) => {
     setEditing(member.id);
     setFormData({ name: member.name, role: member.role, description: member.description || "" });
-    setImageUrl(member.image_url);
-    setImagePreview(member.image_url);
+    setImageUrl(member.image_url || "");
   };
 
   const handleDelete = async (id: string) => {
