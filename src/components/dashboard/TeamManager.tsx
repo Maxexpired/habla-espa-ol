@@ -103,8 +103,7 @@ export const TeamManager = () => {
   const resetForm = () => {
     setEditing(null);
     setFormData({ name: "", role: "", description: "" });
-    setImageUrl(null);
-    setImagePreview(null);
+    setImageUrl("");
   };
 
   return (
@@ -154,8 +153,9 @@ export const TeamManager = () => {
             <ImageUploadField
               label="Foto del miembro"
               uploading={uploading}
-              imagePreview={imagePreview}
+              imageUrl={imageUrl}
               onFileSelect={handleImageSelect}
+              onClear={() => setImageUrl("")}
             />
             <Button type="submit" disabled={uploading}>
               <Plus className="h-4 w-4 mr-2" />
