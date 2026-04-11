@@ -21,6 +21,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,12 +48,26 @@ export default function Auth() {
       }
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Check if email is confirmed
+        if (data.user && !data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          setShowVerification(true);
+          toast({
+            title: "Email no verificado",
+            description: "Debes confirmar tu email antes de iniciar sesión.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
         toast({ title: "¡Bienvenido de vuelta!" });
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -60,8 +76,19 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast({ title: "¡Cuenta creada! Ya puedes iniciar sesión." });
-        setIsLogin(true);
+        
+        // Check if user already exists (identities will be empty)
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          toast({
+            title: "Este email ya está registrado",
+            description: "Intenta iniciar sesión.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        setShowVerification(true);
       }
     } catch (error: any) {
       toast({
@@ -71,6 +98,32 @@ export default function Auth() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: "Correo reenviado",
+        description: "Revisa tu bandeja de entrada y carpeta de spam.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al reenviar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setResending(false);
     }
   };
 
