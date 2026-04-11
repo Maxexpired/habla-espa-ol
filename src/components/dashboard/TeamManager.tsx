@@ -23,9 +23,8 @@ export const TeamManager = () => {
   const [editing, setEditing] = useState<string | null>(null);
   const [formData, setFormData] = useState({ name: "", role: "", description: "" });
   const { toast } = useToast();
-  const { uploading, uploadImage } = useImageUpload();
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { uploading, uploadImage } = useImageUpload("team-images");
+  const [imageUrl, setImageUrl] = useState<string>("");
 
   useEffect(() => {
     fetchMembers();
@@ -40,12 +39,13 @@ export const TeamManager = () => {
   };
 
   const handleImageSelect = async (file: File) => {
-    setImagePreview(URL.createObjectURL(file));
-    const url = await uploadImage(file, "team-images");
-    if (url) {
-      setImageUrl(url);
-    } else {
-      setImagePreview(null);
+    try {
+      const url = await uploadImage(file);
+      if (url) {
+        setImageUrl(url);
+      }
+    } catch {
+      toast({ title: "Error al subir imagen", variant: "destructive" });
     }
   };
 
