@@ -5,6 +5,7 @@ import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,6 +160,10 @@ export default function Profile() {
       setUpdating(false);
     }
   };
+
+  if (!emailConfirmed && user) {
+    return <EmailVerificationBanner email={user.email} />;
+  }
 
   if (loading) {
     return (
