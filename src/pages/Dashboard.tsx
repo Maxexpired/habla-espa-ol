@@ -78,6 +78,10 @@ export default function Dashboard() {
             <NewsManager />
           </TabsContent>
 
+          <TabsContent value="team">
+            <TeamManager />
+          </TabsContent>
+
           <TabsContent value="faqs">
             <FAQsManager />
           </TabsContent>
