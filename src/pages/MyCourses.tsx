@@ -4,6 +4,7 @@ import { Header } from "@/components/Header";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ export default function MyCourses() {
   const [enrollments, setEnrollments] = useState<EnrollmentWithCourse[]>([]);
   const [certificates, setCertificates] = useState<Record<string, Certificate>>({});
   const [loading, setLoading] = useState(true);
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, emailConfirmed } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -45,9 +46,10 @@ export default function MyCourses() {
       navigate("/auth");
       return;
     }
+    if (!emailConfirmed) return;
     fetchEnrollments();
     fetchCertificates();
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, emailConfirmed, navigate]);
 
   const fetchEnrollments = async () => {
     if (!user) return;
@@ -131,6 +133,10 @@ export default function MyCourses() {
     const { variant, label } = config[status as keyof typeof config] || config.active;
     return <Badge variant={variant}>{label}</Badge>;
   };
+
+  if (!emailConfirmed && user) {
+    return <EmailVerificationBanner email={user.email} />;
+  }
 
   if (loading) {
     return (

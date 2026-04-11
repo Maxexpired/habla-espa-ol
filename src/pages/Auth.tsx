@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, MailCheck, RefreshCw } from "lucide-react";
 import { z } from "zod";
 
 const authSchema = z.object({
@@ -21,6 +21,8 @@ export default function Auth() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -46,12 +48,26 @@ export default function Auth() {
       }
 
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Check if email is confirmed
+        if (data.user && !data.user.email_confirmed_at) {
+          await supabase.auth.signOut();
+          setShowVerification(true);
+          toast({
+            title: "Email no verificado",
+            description: "Debes confirmar tu email antes de iniciar sesión.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
         toast({ title: "¡Bienvenido de vuelta!" });
         navigate("/");
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
@@ -60,8 +76,19 @@ export default function Auth() {
           },
         });
         if (error) throw error;
-        toast({ title: "¡Cuenta creada! Ya puedes iniciar sesión." });
-        setIsLogin(true);
+        
+        // Check if user already exists (identities will be empty)
+        if (data.user && data.user.identities && data.user.identities.length === 0) {
+          toast({
+            title: "Este email ya está registrado",
+            description: "Intenta iniciar sesión.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+        
+        setShowVerification(true);
       }
     } catch (error: any) {
       toast({
@@ -71,6 +98,32 @@ export default function Auth() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+        },
+      });
+      if (error) throw error;
+      toast({
+        title: "Correo reenviado",
+        description: "Revisa tu bandeja de entrada y carpeta de spam.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error al reenviar",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setResending(false);
     }
   };
 
@@ -89,81 +142,121 @@ export default function Auth() {
         </Button>
       </Link>
 
-      <Card className="w-full max-w-md animate-fade-in relative z-10 backdrop-blur-sm bg-background/95 shadow-2xl border-border/50">
-        <CardHeader className="space-y-2">
-          <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-serene-accent bg-clip-text text-transparent animate-scale-in">
-            {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
-          </CardTitle>
-          <CardDescription className="text-center text-base">
-            {isLogin ? "Ingresa a tu cuenta de Serene" : "Únete a la comunidad Serene"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleAuth} className="space-y-5">
-            {!isLogin && (
-              <div className="space-y-2 animate-fade-in">
-                <Label htmlFor="fullName" className="text-sm font-medium">
-                  Nombre Completo
+      {showVerification ? (
+        <Card className="w-full max-w-md animate-fade-in relative z-10 backdrop-blur-sm bg-background/95 shadow-2xl border-border/50">
+          <CardHeader className="space-y-2 text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-serene-accent/20 flex items-center justify-center mb-2 animate-scale-in">
+              <MailCheck className="h-8 w-8 text-serene-accent" />
+            </div>
+            <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-serene-accent bg-clip-text text-transparent">
+              Verifica tu correo
+            </CardTitle>
+            <CardDescription className="text-base">
+              Hemos enviado un enlace de verificación a <strong>{email}</strong>. Revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground text-center">
+              ¿No recibiste el correo? Revisa tu carpeta de spam o haz clic en el botón de abajo.
+            </div>
+            <Button
+              onClick={handleResendVerification}
+              disabled={resending}
+              variant="outline"
+              className="w-full"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${resending ? "animate-spin" : ""}`} />
+              {resending ? "Reenviando..." : "Reenviar correo de verificación"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setShowVerification(false);
+                setIsLogin(true);
+              }}
+            >
+              Volver al inicio de sesión
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <Card className="w-full max-w-md animate-fade-in relative z-10 backdrop-blur-sm bg-background/95 shadow-2xl border-border/50">
+          <CardHeader className="space-y-2">
+            <CardTitle className="text-3xl font-bold text-center bg-gradient-to-r from-primary to-serene-accent bg-clip-text text-transparent animate-scale-in">
+              {isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
+            </CardTitle>
+            <CardDescription className="text-center text-base">
+              {isLogin ? "Ingresa a tu cuenta de Serene" : "Únete a la comunidad Serene"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleAuth} className="space-y-5">
+              {!isLogin && (
+                <div className="space-y-2 animate-fade-in">
+                  <Label htmlFor="fullName" className="text-sm font-medium">
+                    Nombre Completo
+                  </Label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required={!isLogin}
+                    placeholder="Juan Pérez"
+                    className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">
+                  Email
                 </Label>
                 <Input
-                  id="fullName"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required={!isLogin}
-                  placeholder="Juan Pérez"
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="tu@email.com"
                   className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
                 />
               </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                placeholder="tu@email.com"
-                className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium">
-                Contraseña
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                placeholder="••••••••"
-                className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
-              />
-            </div>
-            <Button 
-              type="submit" 
-              className="w-full transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-95" 
-              disabled={loading}
-            >
-              <span className="flex items-center justify-center gap-2">
-                {loading ? "Cargando..." : isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
-              </span>
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              className="w-full transition-all duration-200 hover:scale-[1.01] hover:bg-muted/50"
-              onClick={() => setIsLogin(!isLogin)}
-            >
-              {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">
+                  Contraseña
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  placeholder="••••••••"
+                  className="transition-all duration-200 focus:scale-[1.02] focus:shadow-lg"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-95" 
+                disabled={loading}
+              >
+                <span className="flex items-center justify-center gap-2">
+                  {loading ? "Cargando..." : isLogin ? "Iniciar Sesión" : "Crear Cuenta"}
+                </span>
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full transition-all duration-200 hover:scale-[1.01] hover:bg-muted/50"
+                onClick={() => setIsLogin(!isLogin)}
+              >
+                {isLogin ? "¿No tienes cuenta? Regístrate" : "¿Ya tienes cuenta? Inicia sesión"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

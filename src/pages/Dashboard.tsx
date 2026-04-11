@@ -8,10 +8,11 @@ import { ProjectsManager } from "@/components/dashboard/ProjectsManager";
 import { NewsManager } from "@/components/dashboard/NewsManager";
 import { FAQsManager } from "@/components/dashboard/FAQsManager";
 import { EnrollmentsManager } from "@/components/dashboard/EnrollmentsManager";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Shield } from "lucide-react";
 
 export default function Dashboard() {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, emailConfirmed } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +27,10 @@ export default function Dashboard() {
         <p>Cargando...</p>
       </div>
     );
+  }
+
+  if (!emailConfirmed && user) {
+    return <EmailVerificationBanner email={user.email} />;
   }
 
   if (!isAdmin) {
