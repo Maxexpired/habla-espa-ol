@@ -1,76 +1,34 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const team = [
-  {
-    name: "Daniela Romero",
-    role: "CEO & Fundadora",
-    image: "a",
-  },
-  {
-    name: "Natalie Rojas",
-    role: "Director de Tecnología",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Dominique ",
-    role: "Directora de Educación",
-    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Liliana Guerrero",
-    role: "Ingeniero de IA",
-    image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Diego Romero",
-    role: "Directora de Innovación",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Mathias Peña",
-    role: "Líder de Desarrollo",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Javiera Garcia",
-    role: "Coordinadora de Cursos",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Aline Campos",
-    role: "Especialista en Robótica",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Dominique Pincheira",
-    role: "Diseñadora UX/UI",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&h=300&fit=crop",
-  },
-  {
-    name: "MARY",
-    role: "Ingeniero de Software",
-    image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Daniela Flores",
-    role: "Gerente de Proyectos",
-    image: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Elias",
-    role: "Especialista en Python",
-    image: "https://images.unsplash.com/photo-1489980557514-251d61e3eeb6?w=300&h=300&fit=crop",
-  },
-  {
-    name: "Benjamin",
-    role: "Analista de Datos",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&h=300&fit=crop",
-  },
-];
+interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  image_url: string | null;
+  description: string | null;
+}
 
 export const TeamSection = () => {
+  const [team, setTeam] = useState<TeamMember[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTeam = async () => {
+      const { data } = await supabase
+        .from("team_members")
+        .select("*")
+        .order("created_at", { ascending: true });
+      setTeam(data || []);
+      setLoading(false);
+    };
+    fetchTeam();
+  }, []);
+
   return (
     <section id="equipo" className="py-12 sm:py-16 md:py-24 gradient-hero text-white relative overflow-hidden">
       {/* Background decoration */}
@@ -90,41 +48,55 @@ export const TeamSection = () => {
           </p>
         </div>
 
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full max-w-7xl mx-auto relative px-8 sm:px-12"
-        >
-          <CarouselContent className="-ml-2 md:-ml-4">
-            {team.map((member, index) => (
-              <CarouselItem
-                key={index}
-                className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
-              >
-                <Card className="group card-hover glass-effect border-white/10 backdrop-blur-lg">
-                  <CardContent className="p-4 sm:p-6 text-center">
-                    <div className="mb-3 sm:mb-4 relative mx-auto w-24 h-24 sm:w-32 sm:h-32">
-                      <div className="absolute -inset-1 bg-gradient-accent rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity" />
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="relative w-full h-full object-cover rounded-full border-4 border-white/20 group-hover:border-serene-accent transition-all shadow-elegant"
-                      />
-                    </div>
-                    <h3 className="text-base sm:text-lg font-bold text-white mb-1 gradient-text-hover">
-                      {member.name}
-                    </h3>
-                    <p className="text-serene-accent-light font-medium text-xs sm:text-sm">{member.role}</p>
-                  </CardContent>
-                </Card>
-              </CarouselItem>
+        {loading ? (
+          <div className="flex justify-center gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex flex-col items-center gap-3 p-6">
+                <Skeleton className="w-32 h-32 rounded-full bg-white/10" />
+                <Skeleton className="w-24 h-4 bg-white/10" />
+                <Skeleton className="w-20 h-3 bg-white/10" />
+              </div>
             ))}
-          </CarouselContent>
-          <CarouselPrevious className="absolute -left-3 sm:-left-4 md:-left-6 top-1/2 -translate-y-1/2 bg-gradient-accent hover:shadow-glow text-white border-none w-10 h-10 sm:w-12 sm:h-12 shadow-elegant z-10 transition-all hover:scale-110" />
-          <CarouselNext className="absolute -right-3 sm:-right-4 md:-right-6 top-1/2 -translate-y-1/2 bg-gradient-accent hover:shadow-glow text-white border-none w-10 h-10 sm:w-12 sm:h-12 shadow-elegant z-10 transition-all hover:scale-110" />
-        </Carousel>
+          </div>
+        ) : team.length === 0 ? (
+          <p className="text-center text-gray-400 text-lg">No hay miembros disponibles</p>
+        ) : (
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full max-w-7xl mx-auto relative px-8 sm:px-12"
+          >
+            <CarouselContent className="-ml-2 md:-ml-4">
+              {team.map((member) => (
+                <CarouselItem
+                  key={member.id}
+                  className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                >
+                  <Card className="group card-hover glass-effect border-white/10 backdrop-blur-lg">
+                    <CardContent className="p-4 sm:p-6 text-center">
+                      <div className="mb-3 sm:mb-4 relative mx-auto w-24 h-24 sm:w-32 sm:h-32">
+                        <div className="absolute -inset-1 bg-gradient-accent rounded-full blur opacity-50 group-hover:opacity-100 transition-opacity" />
+                        <img
+                          src={member.image_url || "/placeholder.svg"}
+                          alt={member.name}
+                          className="relative w-full h-full object-cover rounded-full border-4 border-white/20 group-hover:border-serene-accent transition-all shadow-elegant"
+                        />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-bold text-white mb-1 gradient-text-hover">
+                        {member.name}
+                      </h3>
+                      <p className="text-serene-accent-light font-medium text-xs sm:text-sm">{member.role}</p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="absolute -left-3 sm:-left-4 md:-left-6 top-1/2 -translate-y-1/2 bg-gradient-accent hover:shadow-glow text-white border-none w-10 h-10 sm:w-12 sm:h-12 shadow-elegant z-10 transition-all hover:scale-110" />
+            <CarouselNext className="absolute -right-3 sm:-right-4 md:-right-6 top-1/2 -translate-y-1/2 bg-gradient-accent hover:shadow-glow text-white border-none w-10 h-10 sm:w-12 sm:h-12 shadow-elegant z-10 transition-all hover:scale-110" />
+          </Carousel>
+        )}
       </div>
     </section>
   );
