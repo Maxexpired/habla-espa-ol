@@ -7,12 +7,14 @@ export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [emailConfirmed, setEmailConfirmed] = useState(false);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setEmailConfirmed(!!session?.user?.email_confirmed_at);
         
         if (session?.user) {
           setLoading(true);
@@ -29,6 +31,7 @@ export const useAuth = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setEmailConfirmed(!!session?.user?.email_confirmed_at);
       if (session?.user) {
         setLoading(true);
         setTimeout(() => {
@@ -65,7 +68,8 @@ export const useAuth = () => {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setEmailConfirmed(false);
   };
 
-  return { user, session, loading, isAdmin, signOut };
+  return { user, session, loading, isAdmin, emailConfirmed, signOut };
 };
