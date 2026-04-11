@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Profile() {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, loading, emailConfirmed } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [fullName, setFullName] = useState("");
