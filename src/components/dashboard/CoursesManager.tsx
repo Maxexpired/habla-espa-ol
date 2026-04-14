@@ -173,6 +173,7 @@ export const CoursesManager = () => {
                 required
               />
             </div>
+            <ImageUploadField
               label="Imagen"
               imageUrl={formData.image_url}
               uploading={uploading}
