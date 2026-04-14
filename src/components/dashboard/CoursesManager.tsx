@@ -161,7 +161,18 @@ export const CoursesManager = () => {
                 required
               />
             </div>
-            <ImageUploadField
+            <div className="space-y-2">
+              <Label htmlFor="price">Precio (CLP)</Label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                placeholder="24990"
+                required
+              />
+            </div>
               label="Imagen"
               imageUrl={formData.image_url}
               uploading={uploading}
