@@ -272,6 +272,11 @@ export default function Courses() {
                   <CardDescription className="line-clamp-2">
                     {course.description.split('\n')[0]}
                   </CardDescription>
+                  {course.price > 0 && (
+                    <p className="text-lg font-bold text-serene-primary">
+                      ${course.price.toLocaleString("es-CL")} {course.currency}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
