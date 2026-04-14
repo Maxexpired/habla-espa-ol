@@ -32,6 +32,8 @@ export const CoursesManager = () => {
     topics: "",
     image_url: "",
     published: false,
+    price: 0,
+    currency: "CLP",
   });
   const { toast } = useToast();
   const { uploadImage, uploading } = useImageUpload("course-images");
@@ -62,6 +64,8 @@ export const CoursesManager = () => {
             topics: topicsArray,
             image_url: formData.image_url || null,
             published: formData.published,
+            price: formData.price,
+            currency: formData.currency,
           })
           .eq("id", editing);
         toast({ title: "Curso actualizado correctamente" });
@@ -72,6 +76,8 @@ export const CoursesManager = () => {
           topics: topicsArray,
           image_url: formData.image_url || null,
           published: formData.published,
+          price: formData.price,
+          currency: formData.currency,
         });
         toast({ title: "Curso creado correctamente" });
       }
@@ -94,6 +100,8 @@ export const CoursesManager = () => {
       topics: course.topics.join(", "),
       image_url: course.image_url || "",
       published: course.published,
+      price: course.price,
+      currency: course.currency,
     });
   };
 
@@ -112,6 +120,8 @@ export const CoursesManager = () => {
       topics: "",
       image_url: "",
       published: false,
+      price: 0,
+      currency: "CLP",
     });
   };
 
