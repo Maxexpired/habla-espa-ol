@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "https://deno.land/x/cors@v1.2.1/mod.ts";
 
 const _corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,10 +41,31 @@ serve(async (req) => {
     }
     const userId = claimsData.claims.sub;
 
-    const { course_id, amount, title } = await req.json();
+    const { course_id } = await req.json();
 
-    if (!course_id || !amount || !title) {
-      return new Response(JSON.stringify({ error: "Missing required fields: course_id, amount, title" }), {
+    if (!course_id) {
+      return new Response(JSON.stringify({ error: "Missing required field: course_id" }), {
+        status: 400,
+        headers: { ..._corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Fetch course to get price and currency
+    const { data: course, error: courseError } = await supabase
+      .from("courses")
+      .select("id, title, price, currency")
+      .eq("id", course_id)
+      .single();
+
+    if (courseError || !course) {
+      return new Response(JSON.stringify({ error: "Course not found" }), {
+        status: 404,
+        headers: { ..._corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!course.price || course.price <= 0) {
+      return new Response(JSON.stringify({ error: "Este curso no tiene un precio configurado" }), {
         status: 400,
         headers: { ..._corsHeaders, "Content-Type": "application/json" },
       });
@@ -57,7 +77,8 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         course_id,
-        amount,
+        amount: course.price,
+        currency: course.currency || "CLP",
         status: "pending",
       })
       .select()
@@ -79,10 +100,10 @@ serve(async (req) => {
       body: JSON.stringify({
         items: [
           {
-            title,
+            title: `Certificado: ${course.title}`,
             quantity: 1,
-            unit_price: Number(amount),
-            currency_id: "ARS",
+            unit_price: Number(course.price),
+            currency_id: course.currency || "CLP",
           },
         ],
         external_reference: order.id,

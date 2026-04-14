@@ -19,6 +19,8 @@ interface Course {
   topics: string[];
   image_url: string | null;
   published: boolean;
+  price: number;
+  currency: string;
 }
 
 export const CoursesManager = () => {
@@ -30,6 +32,8 @@ export const CoursesManager = () => {
     topics: "",
     image_url: "",
     published: false,
+    price: 0,
+    currency: "CLP",
   });
   const { toast } = useToast();
   const { uploadImage, uploading } = useImageUpload("course-images");
@@ -60,6 +64,8 @@ export const CoursesManager = () => {
             topics: topicsArray,
             image_url: formData.image_url || null,
             published: formData.published,
+            price: formData.price,
+            currency: formData.currency,
           })
           .eq("id", editing);
         toast({ title: "Curso actualizado correctamente" });
@@ -70,6 +76,8 @@ export const CoursesManager = () => {
           topics: topicsArray,
           image_url: formData.image_url || null,
           published: formData.published,
+          price: formData.price,
+          currency: formData.currency,
         });
         toast({ title: "Curso creado correctamente" });
       }
@@ -92,6 +100,8 @@ export const CoursesManager = () => {
       topics: course.topics.join(", "),
       image_url: course.image_url || "",
       published: course.published,
+      price: course.price,
+      currency: course.currency,
     });
   };
 
@@ -110,6 +120,8 @@ export const CoursesManager = () => {
       topics: "",
       image_url: "",
       published: false,
+      price: 0,
+      currency: "CLP",
     });
   };
 
@@ -146,6 +158,18 @@ export const CoursesManager = () => {
                 value={formData.topics}
                 onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
                 placeholder="Python básico, Variables, Funciones"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="price">Precio (CLP)</Label>
+              <Input
+                id="price"
+                type="number"
+                min="0"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                placeholder="24990"
                 required
               />
             </div>
@@ -197,7 +221,8 @@ export const CoursesManager = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              <p className="text-sm text-gray-600">{course.description}</p>
+              <p className="text-sm text-muted-foreground">{course.description}</p>
+              <p className="text-sm font-semibold">Precio: ${course.price.toLocaleString("es-CL")} {course.currency}</p>
               <div className="flex flex-wrap gap-1">
                 {course.topics.map((topic, idx) => (
                   <Badge key={idx} variant="outline" className="text-xs">

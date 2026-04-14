@@ -103,9 +103,11 @@ export type Database = {
       courses: {
         Row: {
           created_at: string
+          currency: string
           description: string
           id: string
           image_url: string | null
+          price: number
           published: boolean
           title: string
           topics: string[]
@@ -113,9 +115,11 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          currency?: string
           description: string
           id?: string
           image_url?: string | null
+          price?: number
           published?: boolean
           title: string
           topics?: string[]
@@ -123,9 +127,11 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          currency?: string
           description?: string
           id?: string
           image_url?: string | null
+          price?: number
           published?: boolean
           title?: string
           topics?: string[]

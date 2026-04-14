@@ -20,6 +20,8 @@ interface Course {
   description: string;
   topics: string[];
   image_url: string | null;
+  price: number;
+  currency: string;
   average_rating?: number;
   reviews_count?: number;
 }
@@ -180,12 +182,9 @@ export default function Courses() {
 
     setPayingCourseId(course.id);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
       const response = await supabase.functions.invoke("mercadopago-create-preference", {
         body: {
           course_id: course.id,
-          amount: 5000, // Precio en ARS, ajustar según el curso
-          title: `Certificado: ${course.title}`,
         },
       });
 
@@ -273,6 +272,11 @@ export default function Courses() {
                   <CardDescription className="line-clamp-2">
                     {course.description.split('\n')[0]}
                   </CardDescription>
+                  {course.price > 0 && (
+                    <p className="text-lg font-bold text-serene-primary">
+                      ${course.price.toLocaleString("es-CL")} {course.currency}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
