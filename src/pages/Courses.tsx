@@ -47,6 +47,33 @@ export default function Courses() {
     }
   }, [user]);
 
+  // Handle payment return
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    const orderId = searchParams.get("order");
+    if (payment && orderId) {
+      if (payment === "success") {
+        toast({
+          title: "¡Pago exitoso!",
+          description: "Tu pago ha sido procesado correctamente. Ya puedes acceder al curso.",
+        });
+        fetchEnrollments();
+      } else if (payment === "failure") {
+        toast({
+          title: "Pago rechazado",
+          description: "El pago no pudo ser procesado. Intenta nuevamente.",
+          variant: "destructive",
+        });
+      } else if (payment === "pending") {
+        toast({
+          title: "Pago pendiente",
+          description: "Tu pago está siendo procesado. Te notificaremos cuando se confirme.",
+        });
+      }
+      setSearchParams({});
+    }
+  }, [searchParams]);
+
   const fetchCourses = async () => {
     const { data, error } = await supabase
       .from("courses")
