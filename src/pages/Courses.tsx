@@ -313,14 +313,14 @@ export default function Courses() {
                         <Button
                           variant="secondary"
                           className="flex-1"
-                          onClick={() => {
-                            toast({
-                              title: "Próximamente",
-                              description: "La opción de compra estará disponible pronto",
-                            });
-                          }}
+                          disabled={payingCourseId === course.id}
+                          onClick={() => handleBuyCertificate(course)}
                         >
-                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          {payingCourseId === course.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                          )}
                           Comprar Certificado
                         </Button>
                       </>
@@ -422,14 +422,14 @@ export default function Courses() {
                               variant="secondary"
                               className="flex-1"
                               size="lg"
-                              onClick={() => {
-                                toast({
-                                  title: "Próximamente",
-                                  description: "La opción de compra estará disponible pronto",
-                                });
-                              }}
+                              disabled={payingCourseId === selectedCourse.id}
+                              onClick={() => handleBuyCertificate(selectedCourse)}
                             >
-                              <ShoppingCart className="mr-2 h-4 w-4" />
+                              {payingCourseId === selectedCourse.id ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                              )}
                               Comprar Certificado
                             </Button>
                           </>
