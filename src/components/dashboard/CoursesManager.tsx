@@ -19,6 +19,8 @@ interface Course {
   topics: string[];
   image_url: string | null;
   published: boolean;
+  price: number;
+  currency: string;
 }
 
 export const CoursesManager = () => {
