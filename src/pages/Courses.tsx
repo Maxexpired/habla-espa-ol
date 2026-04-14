@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, Play, ShoppingCart, Star } from "lucide-react";
+import { BookOpen, CheckCircle, Loader2, Play, ShoppingCart, Star } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -33,10 +33,12 @@ export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payingCourseId, setPayingCourseId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   useEffect(() => {
     fetchCourses();
@@ -44,6 +46,33 @@ export default function Courses() {
       fetchEnrollments();
     }
   }, [user]);
+
+  // Handle payment return
+  useEffect(() => {
+    const payment = searchParams.get("payment");
+    const orderId = searchParams.get("order");
+    if (payment && orderId) {
+      if (payment === "success") {
+        toast({
+          title: "¡Pago exitoso!",
+          description: "Tu pago ha sido procesado correctamente. Ya puedes acceder al curso.",
+        });
+        fetchEnrollments();
+      } else if (payment === "failure") {
+        toast({
+          title: "Pago rechazado",
+          description: "El pago no pudo ser procesado. Intenta nuevamente.",
+          variant: "destructive",
+        });
+      } else if (payment === "pending") {
+        toast({
+          title: "Pago pendiente",
+          description: "Tu pago está siendo procesado. Te notificaremos cuando se confirme.",
+        });
+      }
+      setSearchParams({});
+    }
+  }, [searchParams]);
 
   const fetchCourses = async () => {
     const { data, error } = await supabase
@@ -135,6 +164,49 @@ export default function Courses() {
         description: error.message,
         variant: "destructive",
       });
+    }
+  };
+
+  const handleBuyCertificate = async (course: Course) => {
+    if (!user) {
+      toast({
+        title: "Inicia sesión",
+        description: "Debes iniciar sesión para comprar un certificado",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    setPayingCourseId(course.id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke("mercadopago-create-preference", {
+        body: {
+          course_id: course.id,
+          amount: 5000, // Precio en ARS, ajustar según el curso
+          title: `Certificado: ${course.title}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Error al crear la preferencia de pago");
+      }
+
+      const { init_point } = response.data;
+      if (init_point) {
+        window.location.href = init_point;
+      } else {
+        throw new Error("No se recibió el enlace de pago");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo iniciar el pago",
+        variant: "destructive",
+      });
+    } finally {
+      setPayingCourseId(null);
     }
   };
 
@@ -241,14 +313,14 @@ export default function Courses() {
                         <Button
                           variant="secondary"
                           className="flex-1"
-                          onClick={() => {
-                            toast({
-                              title: "Próximamente",
-                              description: "La opción de compra estará disponible pronto",
-                            });
-                          }}
+                          disabled={payingCourseId === course.id}
+                          onClick={() => handleBuyCertificate(course)}
                         >
-                          <ShoppingCart className="mr-2 h-4 w-4" />
+                          {payingCourseId === course.id ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <ShoppingCart className="mr-2 h-4 w-4" />
+                          )}
                           Comprar Certificado
                         </Button>
                       </>
@@ -350,14 +422,14 @@ export default function Courses() {
                               variant="secondary"
                               className="flex-1"
                               size="lg"
-                              onClick={() => {
-                                toast({
-                                  title: "Próximamente",
-                                  description: "La opción de compra estará disponible pronto",
-                                });
-                              }}
+                              disabled={payingCourseId === selectedCourse.id}
+                              onClick={() => handleBuyCertificate(selectedCourse)}
                             >
-                              <ShoppingCart className="mr-2 h-4 w-4" />
+                              {payingCourseId === selectedCourse.id ? (
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              ) : (
+                                <ShoppingCart className="mr-2 h-4 w-4" />
+                              )}
                               Comprar Certificado
                             </Button>
                           </>
