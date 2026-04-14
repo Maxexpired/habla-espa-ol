@@ -167,6 +167,49 @@ export default function Courses() {
     }
   };
 
+  const handleBuyCertificate = async (course: Course) => {
+    if (!user) {
+      toast({
+        title: "Inicia sesión",
+        description: "Debes iniciar sesión para comprar un certificado",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    setPayingCourseId(course.id);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke("mercadopago-create-preference", {
+        body: {
+          course_id: course.id,
+          amount: 5000, // Precio en ARS, ajustar según el curso
+          title: `Certificado: ${course.title}`,
+        },
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || "Error al crear la preferencia de pago");
+      }
+
+      const { init_point } = response.data;
+      if (init_point) {
+        window.location.href = init_point;
+      } else {
+        throw new Error("No se recibió el enlace de pago");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo iniciar el pago",
+        variant: "destructive",
+      });
+    } finally {
+      setPayingCourseId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
