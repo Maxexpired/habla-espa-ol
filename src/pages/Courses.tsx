@@ -31,6 +31,11 @@ interface Enrollment {
   status: string;
 }
 
+const formatPrice = (price: number, currency: string) => {
+  if (!price || price <= 0) return null;
+  return `$${price.toLocaleString("es-CL")} ${currency || "CLP"}`;
+};
+
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -49,7 +54,6 @@ export default function Courses() {
     }
   }, [user]);
 
-  // Handle payment return
   useEffect(() => {
     const payment = searchParams.get("payment");
     const orderId = searchParams.get("order");
@@ -84,7 +88,6 @@ export default function Courses() {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      // Fetch ratings for each course
       const coursesWithRatings = await Promise.all(
         data.map(async (course) => {
           const { data: avgData } = await supabase.rpc("get_course_average_rating", {
@@ -93,7 +96,6 @@ export default function Courses() {
           const { data: countData } = await supabase.rpc("get_course_reviews_count", {
             course_uuid: course.id,
           });
-          
           return {
             ...course,
             average_rating: avgData || 0,
@@ -101,7 +103,6 @@ export default function Courses() {
           };
         })
       );
-      
       setCourses(coursesWithRatings);
     }
     setLoading(false);
@@ -109,12 +110,10 @@ export default function Courses() {
 
   const fetchEnrollments = async () => {
     if (!user) return;
-    
     const { data } = await supabase
       .from("enrollments")
       .select("course_id, status")
       .eq("user_id", user.id);
-
     if (data) {
       setEnrollments(data);
     }
@@ -126,66 +125,32 @@ export default function Courses() {
     );
   };
 
-  const handleEnroll = async (courseId: string) => {
+  const hasValidPrice = (course: Course) => course.price > 0;
+
+  const handleBuyCourse = async (course: Course) => {
     if (!user) {
       toast({
         title: "Inicia sesión",
-        description: "Debes iniciar sesión para inscribirte a un curso",
+        description: "Debes iniciar sesión para comprar un curso",
         variant: "destructive",
       });
       navigate("/auth");
       return;
     }
 
-    try {
-      const { error } = await supabase.from("enrollments").insert({
-        user_id: user.id,
-        course_id: courseId,
-      });
-
-      if (error) {
-        if (error.code === "23505") {
-          toast({
-            title: "Ya estás inscrito",
-            description: "Ya estás inscrito en este curso",
-            variant: "destructive",
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        toast({
-          title: "¡Inscripción exitosa!",
-          description: "Te has inscrito correctamente al curso",
-        });
-        fetchEnrollments();
-      }
-    } catch (error: any) {
+    if (!hasValidPrice(course)) {
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Precio no disponible",
+        description: "Este curso no tiene un precio configurado.",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleBuyCertificate = async (course: Course) => {
-    if (!user) {
-      toast({
-        title: "Inicia sesión",
-        description: "Debes iniciar sesión para comprar un certificado",
-        variant: "destructive",
-      });
-      navigate("/auth");
       return;
     }
 
     setPayingCourseId(course.id);
     try {
       const response = await supabase.functions.invoke("mercadopago-create-preference", {
-        body: {
-          course_id: course.id,
-        },
+        body: { course_id: course.id },
       });
 
       if (response.error) {
@@ -207,6 +172,42 @@ export default function Courses() {
     } finally {
       setPayingCourseId(null);
     }
+  };
+
+  const renderBuyButton = (course: Course, size: "default" | "lg" = "default") => {
+    if (user && isEnrolled(course.id)) {
+      return (
+        <Button className="flex-1" size={size} disabled>
+          <CheckCircle className="mr-2 h-4 w-4" />
+          Curso comprado
+        </Button>
+      );
+    }
+
+    const valid = hasValidPrice(course);
+    return (
+      <Button
+        className="flex-1"
+        size={size}
+        disabled={!valid || payingCourseId === course.id}
+        onClick={() => handleBuyCourse(course)}
+      >
+        {payingCourseId === course.id ? (
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        ) : (
+          <ShoppingCart className="mr-2 h-4 w-4" />
+        )}
+        Comprar Curso
+      </Button>
+    );
+  };
+
+  const renderPrice = (course: Course) => {
+    const formatted = formatPrice(course.price, course.currency);
+    if (!formatted) {
+      return <p className="text-sm text-muted-foreground italic">Precio no disponible</p>;
+    }
+    return <p className="text-lg font-bold text-serene-primary">{formatted}</p>;
   };
 
   return (
@@ -258,11 +259,11 @@ export default function Courses() {
                       <CardTitle className="text-xl">{course.title}</CardTitle>
                     </div>
                   </div>
-                  {course.reviews_count > 0 && (
+                  {(course.reviews_count ?? 0) > 0 && (
                     <div className="flex items-center gap-2 mb-2">
                       <div className="flex items-center gap-1">
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{course.average_rating.toFixed(1)}</span>
+                        <span className="font-semibold">{(course.average_rating ?? 0).toFixed(1)}</span>
                       </div>
                       <span className="text-xs text-muted-foreground">
                         ({course.reviews_count} {course.reviews_count === 1 ? "reseña" : "reseñas"})
@@ -272,11 +273,7 @@ export default function Courses() {
                   <CardDescription className="line-clamp-2">
                     {course.description.split('\n')[0]}
                   </CardDescription>
-                  {course.price > 0 && (
-                    <p className="text-lg font-bold text-serene-primary">
-                      ${course.price.toLocaleString("es-CL")} {course.currency}
-                    </p>
-                  )}
+                  {renderPrice(course)}
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex flex-wrap gap-2">
@@ -301,34 +298,7 @@ export default function Courses() {
                   </Button>
 
                   <div className="flex gap-2">
-                    {user && isEnrolled(course.id) ? (
-                      <Button className="flex-1" disabled>
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Ya inscrito
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          className="flex-1"
-                          onClick={() => handleEnroll(course.id)}
-                        >
-                          Inscribirse Gratis
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          className="flex-1"
-                          disabled={payingCourseId === course.id}
-                          onClick={() => handleBuyCertificate(course)}
-                        >
-                          {payingCourseId === course.id ? (
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                          )}
-                          Comprar Certificado
-                        </Button>
-                      </>
-                    )}
+                    {renderBuyButton(course)}
                   </div>
                 </CardContent>
               </Card>
@@ -345,11 +315,11 @@ export default function Courses() {
                   <DialogTitle className="text-2xl">{selectedCourse.title}</DialogTitle>
                   <DialogDescription>
                     Detalles completos del curso
-                    {selectedCourse.reviews_count > 0 && (
+                    {(selectedCourse.reviews_count ?? 0) > 0 && (
                       <div className="flex items-center gap-2 mt-2">
                         <div className="flex items-center gap-1">
                           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-semibold">{selectedCourse.average_rating.toFixed(1)}</span>
+                          <span className="font-semibold">{(selectedCourse.average_rating ?? 0).toFixed(1)}</span>
                         </div>
                         <span className="text-xs">
                           ({selectedCourse.reviews_count} {selectedCourse.reviews_count === 1 ? "reseña" : "reseñas"})
@@ -386,6 +356,16 @@ export default function Courses() {
                     )}
 
                     <div className="space-y-4">
+                      {/* Precio destacado en el modal */}
+                      <div className="p-4 rounded-lg bg-muted/50 border">
+                        <span className="text-sm text-muted-foreground">Precio del curso</span>
+                        <div className="text-2xl font-bold text-serene-primary">
+                          {formatPrice(selectedCourse.price, selectedCourse.currency) || (
+                            <span className="text-base text-muted-foreground italic font-normal">Precio no disponible</span>
+                          )}
+                        </div>
+                      </div>
+
                       <div>
                         <h3 className="text-lg font-semibold mb-2">Temas del curso:</h3>
                         <div className="flex flex-wrap gap-2">
@@ -405,39 +385,7 @@ export default function Courses() {
                       </div>
 
                       <div className="flex gap-2 pt-4">
-                        {user && isEnrolled(selectedCourse.id) ? (
-                          <Button className="flex-1" size="lg" disabled>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Ya inscrito
-                          </Button>
-                        ) : (
-                          <>
-                            <Button
-                              className="flex-1"
-                              size="lg"
-                              onClick={() => {
-                                handleEnroll(selectedCourse.id);
-                                setSelectedCourse(null);
-                              }}
-                            >
-                              Inscribirse Gratis
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              className="flex-1"
-                              size="lg"
-                              disabled={payingCourseId === selectedCourse.id}
-                              onClick={() => handleBuyCertificate(selectedCourse)}
-                            >
-                              {payingCourseId === selectedCourse.id ? (
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              ) : (
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                              )}
-                              Comprar Certificado
-                            </Button>
-                          </>
-                        )}
+                        {renderBuyButton(selectedCourse, "lg")}
                       </div>
                     </div>
                   </TabsContent>
