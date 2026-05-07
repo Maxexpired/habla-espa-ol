@@ -9,6 +9,7 @@ import { NewsManager } from "@/components/dashboard/NewsManager";
 import { FAQsManager } from "@/components/dashboard/FAQsManager";
 import { EnrollmentsManager } from "@/components/dashboard/EnrollmentsManager";
 import { TeamManager } from "@/components/dashboard/TeamManager";
+import { PaymentsManager } from "@/components/dashboard/PaymentsManager";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { Shield } from "lucide-react";
 
