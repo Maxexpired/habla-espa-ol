@@ -54,8 +54,9 @@ export default function Dashboard() {
         </div>
 
         <Tabs defaultValue="courses" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
             <TabsTrigger value="courses">Cursos</TabsTrigger>
+            <TabsTrigger value="payments">Pagos</TabsTrigger>
             <TabsTrigger value="enrollments">Inscripciones</TabsTrigger>
             <TabsTrigger value="projects">Proyectos</TabsTrigger>
             <TabsTrigger value="news">Noticias</TabsTrigger>
@@ -65,6 +66,10 @@ export default function Dashboard() {
 
           <TabsContent value="courses">
             <CoursesManager />
+          </TabsContent>
+
+          <TabsContent value="payments">
+            <PaymentsManager />
           </TabsContent>
 
           <TabsContent value="enrollments">
