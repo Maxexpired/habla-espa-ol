@@ -14,45 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      bank_accounts: {
-        Row: {
-          account_holder: string
-          account_number: string
-          account_type: string
-          active: boolean
-          bank_name: string
-          created_at: string
-          email: string
-          id: string
-          rut: string
-          updated_at: string
-        }
-        Insert: {
-          account_holder: string
-          account_number: string
-          account_type: string
-          active?: boolean
-          bank_name: string
-          created_at?: string
-          email: string
-          id?: string
-          rut: string
-          updated_at?: string
-        }
-        Update: {
-          account_holder?: string
-          account_number?: string
-          account_type?: string
-          active?: boolean
-          bank_name?: string
-          created_at?: string
-          email?: string
-          id?: string
-          rut?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       certificates: {
         Row: {
           certificate_number: string
@@ -97,50 +58,6 @@ export type Database = {
             columns: ["enrollment_id"]
             isOneToOne: true
             referencedRelation: "enrollments"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      course_orders: {
-        Row: {
-          amount: number
-          course_id: string
-          created_at: string
-          currency: string
-          id: string
-          rejection_reason: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          course_id: string
-          created_at?: string
-          currency?: string
-          id?: string
-          rejection_reason?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          course_id?: string
-          created_at?: string
-          currency?: string
-          id?: string
-          rejection_reason?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "course_orders_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
             referencedColumns: ["id"]
           },
         ]
@@ -316,91 +233,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      orders: {
-        Row: {
-          amount: number
-          course_id: string
-          created_at: string
-          currency: string
-          id: string
-          mercadopago_payment_id: string | null
-          mercadopago_preference_id: string | null
-          mercadopago_status: string | null
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount: number
-          course_id: string
-          created_at?: string
-          currency?: string
-          id?: string
-          mercadopago_payment_id?: string | null
-          mercadopago_preference_id?: string | null
-          mercadopago_status?: string | null
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          course_id?: string
-          created_at?: string
-          currency?: string
-          id?: string
-          mercadopago_payment_id?: string | null
-          mercadopago_preference_id?: string | null
-          mercadopago_status?: string | null
-          status?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "orders_course_id_fkey"
-            columns: ["course_id"]
-            isOneToOne: false
-            referencedRelation: "courses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      payment_proofs: {
-        Row: {
-          file_name: string
-          file_url: string
-          id: string
-          order_id: string
-          uploaded_at: string
-          user_id: string
-        }
-        Insert: {
-          file_name: string
-          file_url: string
-          id?: string
-          order_id: string
-          uploaded_at?: string
-          user_id: string
-        }
-        Update: {
-          file_name?: string
-          file_url?: string
-          id?: string
-          order_id?: string
-          uploaded_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "payment_proofs_order_id_fkey"
-            columns: ["order_id"]
-            isOneToOne: false
-            referencedRelation: "course_orders"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       profiles: {
         Row: {
