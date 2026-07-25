@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -7,13 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, Clock, Play, ShoppingCart, Star } from "lucide-react";
+import { BookOpen, CheckCircle, Play, Star, Mail } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CourseReviews } from "@/components/CourseReviews";
-import { BankTransferModal } from "@/components/BankTransferModal";
+import { Link } from "react-router-dom";
 
 interface Course {
   id: string;
@@ -40,20 +38,13 @@ const formatPrice = (price: number, currency: string) => {
 export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [pendingOrders, setPendingOrders] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const [buyingCourse, setBuyingCourse] = useState<Course | null>(null);
   const { user } = useAuth();
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
-    if (user) {
-      fetchEnrollments();
-      fetchPendingOrders();
-    }
+    if (user) fetchEnrollments();
   }, [user]);
 
   const fetchCourses = async () => {
@@ -85,75 +76,31 @@ export default function Courses() {
     if (data) setEnrollments(data);
   };
 
-  const fetchPendingOrders = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("course_orders")
-      .select("course_id")
-      .eq("user_id", user.id)
-      .in("status", ["pending_payment", "pending_review"]);
-    if (data) setPendingOrders(data.map((o) => o.course_id));
-  };
+  const isEnrolled = (courseId: string) =>
+    enrollments.some((e) => e.course_id === courseId && e.status === "active");
 
-  const isEnrolled = (courseId: string) => {
-    return enrollments.some((e) => e.course_id === courseId && e.status === "active");
-  };
-
-  const hasPendingOrder = (courseId: string) => {
-    return pendingOrders.includes(courseId);
-  };
-
-  const hasValidPrice = (course: Course) => course.price > 0;
-
-  const handleBuyCourse = (course: Course) => {
-    if (!user) {
-      toast({ title: "Inicia sesión", description: "Debes iniciar sesión para comprar un curso", variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
-    if (!hasValidPrice(course)) {
-      toast({ title: "Precio no disponible", description: "Este curso no tiene un precio configurado.", variant: "destructive" });
-      return;
-    }
-    setBuyingCourse(course);
-  };
-
-  const renderBuyButton = (course: Course, size: "default" | "lg" = "default") => {
+  const renderActionButton = (course: Course, size: "default" | "lg" = "default") => {
     if (user && isEnrolled(course.id)) {
       return (
         <Button className="flex-1" size={size} disabled>
           <CheckCircle className="mr-2 h-4 w-4" />
-          Curso comprado
+          Inscrito
         </Button>
       );
     }
-
-    if (user && hasPendingOrder(course.id)) {
-      return (
-        <Button className="flex-1" size={size} variant="outline" onClick={() => handleBuyCourse(course)}>
-          <Clock className="mr-2 h-4 w-4" />
-          Pago en proceso
-        </Button>
-      );
-    }
-
-    const valid = hasValidPrice(course);
     return (
-      <Button
-        className="flex-1"
-        size={size}
-        disabled={!valid}
-        onClick={() => handleBuyCourse(course)}
-      >
-        <ShoppingCart className="mr-2 h-4 w-4" />
-        Comprar Curso
+      <Button asChild className="flex-1" size={size}>
+        <Link to="/contacto">
+          <Mail className="mr-2 h-4 w-4" />
+          Solicitar inscripción
+        </Link>
       </Button>
     );
   };
 
   const renderPrice = (course: Course) => {
     const formatted = formatPrice(course.price, course.currency);
-    if (!formatted) return <p className="text-sm text-muted-foreground italic">Precio no disponible</p>;
+    if (!formatted) return null;
     return <p className="text-lg font-bold text-serene-primary">{formatted}</p>;
   };
 
@@ -217,14 +164,13 @@ export default function Courses() {
                     )}
                   </div>
                   <Button variant="outline" className="w-full" onClick={() => setSelectedCourse(course)}>Ver detalles del curso</Button>
-                  <div className="flex gap-2">{renderBuyButton(course)}</div>
+                  <div className="flex gap-2">{renderActionButton(course)}</div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
 
-        {/* Course details modal */}
         <Dialog open={!!selectedCourse} onOpenChange={() => setSelectedCourse(null)}>
           <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
             {selectedCourse && (
@@ -253,20 +199,17 @@ export default function Courses() {
                     {selectedCourse.image_url && (
                       <div className="relative h-64 rounded-lg overflow-hidden">
                         <img src={selectedCourse.image_url} alt={selectedCourse.title} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <Button size="lg" variant="secondary" className="rounded-full w-20 h-20"><Play className="h-10 w-10" /></Button>
-                        </div>
                       </div>
                     )}
                     <div className="space-y-4">
-                      <div className="p-4 rounded-lg bg-muted/50 border">
-                        <span className="text-sm text-muted-foreground">Precio del curso</span>
-                        <div className="text-2xl font-bold text-serene-primary">
-                          {formatPrice(selectedCourse.price, selectedCourse.currency) || (
-                            <span className="text-base text-muted-foreground italic font-normal">Precio no disponible</span>
-                          )}
+                      {formatPrice(selectedCourse.price, selectedCourse.currency) && (
+                        <div className="p-4 rounded-lg bg-muted/50 border">
+                          <span className="text-sm text-muted-foreground">Precio del curso</span>
+                          <div className="text-2xl font-bold text-serene-primary">
+                            {formatPrice(selectedCourse.price, selectedCourse.currency)}
+                          </div>
                         </div>
-                      </div>
+                      )}
                       <div>
                         <h3 className="text-lg font-semibold mb-2">Temas del curso:</h3>
                         <div className="flex flex-wrap gap-2">
@@ -279,7 +222,7 @@ export default function Courses() {
                         <h3 className="text-lg font-semibold mb-2">Descripción:</h3>
                         <div className="prose prose-sm max-w-none whitespace-pre-line text-muted-foreground">{selectedCourse.description}</div>
                       </div>
-                      <div className="flex gap-2 pt-4">{renderBuyButton(selectedCourse, "lg")}</div>
+                      <div className="flex gap-2 pt-4">{renderActionButton(selectedCourse, "lg")}</div>
                     </div>
                   </TabsContent>
                   <TabsContent value="reviews">
@@ -290,23 +233,6 @@ export default function Courses() {
             )}
           </DialogContent>
         </Dialog>
-
-        {/* Bank transfer modal */}
-        {buyingCourse && user && (
-          <BankTransferModal
-            open={!!buyingCourse}
-            onOpenChange={(open) => { if (!open) setBuyingCourse(null); }}
-            courseId={buyingCourse.id}
-            courseTitle={buyingCourse.title}
-            price={buyingCourse.price}
-            currency={buyingCourse.currency}
-            userId={user.id}
-            onOrderCreated={() => {
-              fetchPendingOrders();
-              fetchEnrollments();
-            }}
-          />
-        )}
       </main>
       <Footer />
     </div>
