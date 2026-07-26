@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { UserCircle, Mail, Shield, Upload, Camera } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MyPurchases } from "@/components/MyPurchases";
 
 export default function Profile() {
   const { user, isAdmin, loading, emailConfirmed } = useAuth();
@@ -265,6 +266,8 @@ export default function Profile() {
               </form>
             </CardContent>
           </Card>
+          <MyPurchases />
+
 
           {isAdmin && (
             <Card className="mt-6">
