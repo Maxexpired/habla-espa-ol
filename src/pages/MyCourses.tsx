@@ -61,6 +61,7 @@ export default function MyCourses() {
         courses!enrollments_course_id_fkey (*)
       `)
       .eq("user_id", user.id)
+      .in("status", ["active", "completed"])
       .order("enrolled_at", { ascending: false });
 
     if (!error && data) {
