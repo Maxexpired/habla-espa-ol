@@ -234,6 +234,47 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event: string
+          id: string
+          purchase_id: string | null
+          request_payload: Json | null
+          response_payload: Json | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event: string
+          id?: string
+          purchase_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event?: string
+          id?: string
+          purchase_id?: string | null
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status_code?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_logs_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -290,6 +331,74 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      purchases: {
+        Row: {
+          amount: number
+          approved_at: string | null
+          authorization_code: string | null
+          buy_order: string
+          course_id: string
+          created_at: string
+          currency: string
+          id: string
+          installments: number | null
+          payment_status: string
+          payment_type: string | null
+          response_code: number | null
+          session_id: string
+          transaction_date: string | null
+          transaction_token: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          approved_at?: string | null
+          authorization_code?: string | null
+          buy_order: string
+          course_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          installments?: number | null
+          payment_status?: string
+          payment_type?: string | null
+          response_code?: number | null
+          session_id: string
+          transaction_date?: string | null
+          transaction_token?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          approved_at?: string | null
+          authorization_code?: string | null
+          buy_order?: string
+          course_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          installments?: number | null
+          payment_status?: string
+          payment_type?: string | null
+          response_code?: number | null
+          session_id?: string
+          transaction_date?: string | null
+          transaction_token?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchases_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       team_members: {
         Row: {

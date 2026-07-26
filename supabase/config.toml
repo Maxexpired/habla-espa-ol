@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.generate-certificate]
 verify_jwt = true
+
+[functions.create-webpay-transaction]
+verify_jwt = false
+
+[functions.confirm-webpay-transaction]
+verify_jwt = false

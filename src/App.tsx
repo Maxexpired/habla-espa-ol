@@ -14,6 +14,7 @@ import FAQ from "./pages/FAQ";
 import Profile from "./pages/Profile";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import PaymentReturn from "./pages/payment/PaymentReturn";
 import { Chatbot } from "./components/Chatbot";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,10 @@ const App = () => (
           <Route path="/faq" element={<FAQ />} />
           <Route path="/perfil" element={<Profile />} />
           <Route path="/contacto" element={<Contact />} />
+          <Route path="/payment/return" element={<PaymentReturn />} />
+          <Route path="/payment/success" element={<PaymentReturn />} />
+          <Route path="/payment/failed" element={<PaymentReturn />} />
+          <Route path="/payment/cancelled" element={<PaymentReturn />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

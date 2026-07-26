@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -6,12 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { BookOpen, CheckCircle, Play, Star, Mail } from "lucide-react";
+import { BookOpen, CheckCircle, Play, Star, ShoppingCart, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CourseReviews } from "@/components/CourseReviews";
-import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface Course {
   id: string;
@@ -39,8 +40,11 @@ export default function Courses() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [buyingId, setBuyingId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
-  const { user } = useAuth();
+  const { user, emailConfirmed } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCourses();
@@ -79,21 +83,61 @@ export default function Courses() {
   const isEnrolled = (courseId: string) =>
     enrollments.some((e) => e.course_id === courseId && e.status === "active");
 
+  const handleBuy = async (course: Course) => {
+    if (!user) {
+      toast({ title: "Debes iniciar sesión", description: "Inicia sesión para comprar este curso." });
+      navigate("/auth");
+      return;
+    }
+    if (!emailConfirmed) {
+      toast({ title: "Verifica tu correo", description: "Debes confirmar tu email antes de comprar.", variant: "destructive" });
+      return;
+    }
+    if (buyingId) return;
+    setBuyingId(course.id);
+    try {
+      const returnUrl = `${window.location.origin}/payment/return`;
+      const { data, error } = await supabase.functions.invoke("create-webpay-transaction", {
+        body: { courseId: course.id, returnUrl },
+      });
+      if (error || !data?.url || !data?.token) {
+        const msg = (data as any)?.error || error?.message || "No se pudo iniciar el pago.";
+        toast({ title: "Error", description: msg, variant: "destructive" });
+        setBuyingId(null);
+        return;
+      }
+      // Redirección a Webpay mediante form POST (requerido por Transbank)
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = data.url;
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "token_ws";
+      input.value = data.token;
+      form.appendChild(input);
+      document.body.appendChild(form);
+      form.submit();
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "Error inesperado.", variant: "destructive" });
+      setBuyingId(null);
+    }
+  };
+
   const renderActionButton = (course: Course, size: "default" | "lg" = "default") => {
     if (user && isEnrolled(course.id)) {
       return (
         <Button className="flex-1" size={size} disabled>
           <CheckCircle className="mr-2 h-4 w-4" />
-          Inscrito
+          Ya tienes acceso
         </Button>
       );
     }
+    const hasPrice = course.price && course.price > 0;
+    const isBusy = buyingId === course.id;
     return (
-      <Button asChild className="flex-1" size={size}>
-        <Link to="/contacto">
-          <Mail className="mr-2 h-4 w-4" />
-          Solicitar inscripción
-        </Link>
+      <Button className="flex-1" size={size} disabled={!hasPrice || isBusy} onClick={() => handleBuy(course)}>
+        {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
+        {isBusy ? "Redirigiendo..." : hasPrice ? "Comprar Curso" : "Próximamente"}
       </Button>
     );
   };
