@@ -42,18 +42,38 @@ export const EnrollmentsManager = () => {
   }, []);
 
   const fetchEnrollments = async () => {
-    const { data, error } = await supabase
+    const { data: rows, error } = await supabase
       .from("enrollments")
-      .select(`
-        *,
-        profiles!enrollments_user_id_fkey (email, full_name),
-        courses!enrollments_course_id_fkey (title)
-      `)
+      .select("id, user_id, course_id, status, enrolled_at")
       .order("enrolled_at", { ascending: false });
 
-    if (!error && data) {
-      setEnrollments(data as any);
+    if (error || !rows) {
+      console.error("fetchEnrollments error", error);
+      setLoading(false);
+      return;
     }
+
+    const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+    const courseIds = Array.from(new Set(rows.map((r) => r.course_id)));
+
+    const [{ data: profiles }, { data: courses }] = await Promise.all([
+      supabase.from("profiles").select("id, email, full_name").in("id", userIds),
+      supabase.from("courses").select("id, title").in("id", courseIds),
+    ]);
+
+    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    const courseMap = new Map((courses ?? []).map((c) => [c.id, c]));
+
+    const merged: EnrollmentWithDetails[] = rows.map((r) => ({
+      ...r,
+      profiles: {
+        email: profileMap.get(r.user_id)?.email ?? "—",
+        full_name: profileMap.get(r.user_id)?.full_name ?? null,
+      },
+      courses: { title: courseMap.get(r.course_id)?.title ?? "—" },
+    }));
+
+    setEnrollments(merged);
     setLoading(false);
   };
 
