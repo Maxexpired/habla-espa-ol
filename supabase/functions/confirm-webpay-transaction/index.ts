@@ -17,14 +17,25 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const commerceCode = Deno.env.get('TRANSBANK_COMMERCE_CODE');
-    const apiKey = Deno.env.get('TRANSBANK_API_KEY');
-    const environment = Deno.env.get('TRANSBANK_ENVIRONMENT');
-    if (!commerceCode || !apiKey || !environment) {
-      return json({ error: 'Integración de pagos no configurada.' }, 503);
-    }
+    // ⚠️ CREDENCIALES DE PRUEBA (SANDBOX WEBPAY PLUS)
+    // Se usan SOLO si no hay variables de entorno configuradas.
+    // Reemplazar en producción configurando en Supabase Edge Function Secrets:
+    //   TRANSBANK_COMMERCE_CODE, TRANSBANK_API_KEY, TRANSBANK_ENVIRONMENT=production
+    // La aplicación cambiará a producción automáticamente sin tocar el código.
+    const TBK_INTEGRATION_COMMERCE_CODE = '597055555532';
+    const TBK_INTEGRATION_API_KEY = '579B532A7440BB0C9079DED94D31EA1615BACEB56610332264630D42D0A36B1C';
+
+    const environment = Deno.env.get('TRANSBANK_ENVIRONMENT') ?? 'integration';
+    const commerceCode = Deno.env.get('TRANSBANK_COMMERCE_CODE')
+      ?? (environment === 'integration' ? TBK_INTEGRATION_COMMERCE_CODE : undefined);
+    const apiKey = Deno.env.get('TRANSBANK_API_KEY')
+      ?? (environment === 'integration' ? TBK_INTEGRATION_API_KEY : undefined);
+
     if (environment !== 'integration' && environment !== 'production') {
       return json({ error: 'TRANSBANK_ENVIRONMENT inválido.' }, 503);
+    }
+    if (!commerceCode || !apiKey) {
+      return json({ error: 'Integración de pagos no configurada.' }, 503);
     }
 
     const body = await req.json().catch(() => ({}));
