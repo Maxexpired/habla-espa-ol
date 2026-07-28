@@ -34,9 +34,9 @@ interface Review {
   review: string;
   created_at: string;
   user_id: string;
-  profiles: {
+  author: {
     full_name: string | null;
-    email: string;
+    avatar_url: string | null;
   };
 }
 
@@ -70,28 +70,25 @@ export function CourseReviews({ courseId }: CourseReviewsProps) {
       .order("created_at", { ascending: false });
 
     if (!error && data) {
-      // Fetch profiles for all user_ids
       const userIds = [...new Set(data.map((r) => r.user_id))];
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .in("id", userIds);
+      const { data: authorsData } = await supabase.rpc("get_review_authors", {
+        _user_ids: userIds,
+      });
 
-      const profilesMap = new Map(
-        profilesData?.map((p) => [p.id, p]) || []
+      const authorsMap = new Map(
+        (authorsData ?? []).map((a: any) => [a.id, a])
       );
 
-      const reviewsWithProfiles = data.map((review) => ({
+      const reviewsWithAuthors: Review[] = data.map((review) => ({
         ...review,
-        profiles: profilesMap.get(review.user_id) || {
-          full_name: null,
-          email: "Usuario desconocido",
+        author: {
+          full_name: (authorsMap.get(review.user_id) as any)?.full_name ?? null,
+          avatar_url: (authorsMap.get(review.user_id) as any)?.avatar_url ?? null,
         },
       }));
 
-      setReviews(reviewsWithProfiles);
-      
-      // Check if user already has a review
+      setReviews(reviewsWithAuthors);
+
       if (user) {
         const userReview = data.find((r) => r.user_id === user.id);
         if (userReview) {
@@ -102,6 +99,7 @@ export function CourseReviews({ courseId }: CourseReviewsProps) {
       }
     }
   };
+
 
   const fetchStats = async () => {
     const { data: avgData } = await supabase.rpc("get_course_average_rating", {
@@ -383,15 +381,14 @@ export function CourseReviews({ courseId }: CourseReviewsProps) {
                 <div className="flex items-start gap-4">
                   <Avatar>
                     <AvatarFallback>
-                      {review.profiles?.full_name?.[0]?.toUpperCase() ||
-                        review.profiles?.email[0]?.toUpperCase()}
+                      {review.author?.full_name?.[0]?.toUpperCase() || "E"}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="font-semibold">
-                          {review.profiles?.full_name || review.profiles?.email}
+                          {review.author?.full_name || "Estudiante"}
                         </p>
                         <div className="flex items-center gap-2">
                           {renderStars(review.rating, false, "sm")}
@@ -400,6 +397,7 @@ export function CourseReviews({ courseId }: CourseReviewsProps) {
                           </span>
                         </div>
                       </div>
+
                       {user?.id === review.user_id && (
                         <div className="flex gap-2">
                           <Button
