@@ -107,6 +107,8 @@ export type Database = {
           description: string
           id: string
           image_url: string | null
+          instructor_id: string | null
+          is_free: boolean
           price: number
           published: boolean
           title: string
@@ -119,6 +121,8 @@ export type Database = {
           description: string
           id?: string
           image_url?: string | null
+          instructor_id?: string | null
+          is_free?: boolean
           price?: number
           published?: boolean
           title: string
@@ -131,6 +135,8 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          instructor_id?: string | null
+          is_free?: boolean
           price?: number
           published?: boolean
           title?: string
@@ -146,6 +152,7 @@ export type Database = {
           created_at: string
           enrolled_at: string
           id: string
+          source: string
           status: string
           user_id: string
         }
@@ -155,6 +162,7 @@ export type Database = {
           created_at?: string
           enrolled_at?: string
           id?: string
+          source?: string
           status?: string
           user_id: string
         }
@@ -164,6 +172,7 @@ export type Database = {
           created_at?: string
           enrolled_at?: string
           id?: string
+          source?: string
           status?: string
           user_id?: string
         }
@@ -338,13 +347,16 @@ export type Database = {
           approved_at: string | null
           authorization_code: string | null
           buy_order: string
+          coupon_code: string | null
           course_id: string
           created_at: string
           currency: string
+          discount_amount: number
           id: string
           installments: number | null
           payment_status: string
           payment_type: string | null
+          refunded_at: string | null
           response_code: number | null
           session_id: string
           transaction_date: string | null
@@ -357,13 +369,16 @@ export type Database = {
           approved_at?: string | null
           authorization_code?: string | null
           buy_order: string
+          coupon_code?: string | null
           course_id: string
           created_at?: string
           currency?: string
+          discount_amount?: number
           id?: string
           installments?: number | null
           payment_status?: string
           payment_type?: string | null
+          refunded_at?: string | null
           response_code?: number | null
           session_id: string
           transaction_date?: string | null
@@ -376,13 +391,16 @@ export type Database = {
           approved_at?: string | null
           authorization_code?: string | null
           buy_order?: string
+          coupon_code?: string | null
           course_id?: string
           created_at?: string
           currency?: string
+          discount_amount?: number
           id?: string
           installments?: number | null
           payment_status?: string
           payment_type?: string | null
+          refunded_at?: string | null
           response_code?: number | null
           session_id?: string
           transaction_date?: string | null
@@ -453,7 +471,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          avatar_url: string | null
+          full_name: string | null
+          id: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          full_name?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       generate_certificate_number: { Args: never; Returns: string }
