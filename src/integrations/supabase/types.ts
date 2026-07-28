@@ -471,24 +471,7 @@ export type Database = {
       }
     }
     Views: {
-      profiles_public: {
-        Row: {
-          avatar_url: string | null
-          full_name: string | null
-          id: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          full_name?: string | null
-          id?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          full_name?: string | null
-          id?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       generate_certificate_number: { Args: never; Returns: string }
@@ -499,6 +482,14 @@ export type Database = {
       get_course_reviews_count: {
         Args: { course_uuid: string }
         Returns: number
+      }
+      get_review_authors: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          avatar_url: string
+          full_name: string
+          id: string
+        }[]
       }
       has_role: {
         Args: {
