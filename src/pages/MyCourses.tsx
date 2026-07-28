@@ -113,17 +113,25 @@ export default function MyCourses() {
     }
   };
 
-  const handleDownloadCertificate = (certificate: Certificate) => {
-    // Open certificate in new window where it can be printed as PDF
-    const printWindow = window.open(certificate.file_url, '_blank');
-    if (printWindow) {
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-        }, 500);
-      };
+  const handleDownloadCertificate = async (certificate: Certificate) => {
+    try {
+      // El bucket "certificates" es privado — generar URL firmada de 60s
+      const url = new URL(certificate.file_url);
+      const pathIdx = url.pathname.indexOf("/certificates/");
+      const path = pathIdx >= 0 ? url.pathname.slice(pathIdx + "/certificates/".length) : certificate.file_url;
+      const { data, error } = await supabase.storage
+        .from("certificates")
+        .createSignedUrl(path, 60);
+      if (error || !data?.signedUrl) throw error ?? new Error("No se pudo firmar la URL");
+      const printWindow = window.open(data.signedUrl, "_blank");
+      if (printWindow) {
+        printWindow.onload = () => setTimeout(() => printWindow.print(), 500);
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e?.message || "No se pudo abrir el certificado", variant: "destructive" });
     }
   };
+
 
   const getStatusBadge = (status: string) => {
     const config = {
