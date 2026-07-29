@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import MyCourses from "./pages/MyCourses";
 import Projects from "./pages/Projects";
@@ -16,6 +15,18 @@ import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import PaymentReturn from "./pages/payment/PaymentReturn";
 import { Chatbot } from "./components/Chatbot";
+import DashboardLayout from "./pages/dashboard/DashboardLayout";
+import DashboardHome from "./pages/dashboard/DashboardHome";
+import CoursesPage from "./pages/dashboard/CoursesPage";
+import EnrollmentsPage from "./pages/dashboard/EnrollmentsPage";
+import ProjectsPage from "./pages/dashboard/ProjectsPage";
+import NewsPage from "./pages/dashboard/NewsPage";
+import TeamPage from "./pages/dashboard/TeamPage";
+import FaqsPage from "./pages/dashboard/FaqsPage";
+import FinancePage from "./pages/dashboard/FinancePage";
+import AnalyticsPage from "./pages/dashboard/AnalyticsPage";
+import EmailsPage from "./pages/dashboard/EmailsPage";
+import SettingsPage from "./pages/dashboard/SettingsPage";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +39,19 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="courses" element={<CoursesPage />} />
+            <Route path="enrollments" element={<EnrollmentsPage />} />
+            <Route path="projects" element={<ProjectsPage />} />
+            <Route path="news" element={<NewsPage />} />
+            <Route path="team" element={<TeamPage />} />
+            <Route path="faqs" element={<FaqsPage />} />
+            <Route path="finance" element={<FinancePage />} />
+            <Route path="analytics" element={<AnalyticsPage />} />
+            <Route path="emails" element={<EmailsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+          </Route>
           <Route path="/cursos" element={<Courses />} />
           <Route path="/mis-cursos" element={<MyCourses />} />
           <Route path="/proyectos" element={<Projects />} />
