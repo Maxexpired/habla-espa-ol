@@ -145,6 +145,87 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          attempts: number
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json
+          provider: string | null
+          recipient_email: string
+          sent_at: string | null
+          status: string
+          subject: string
+          template_key: string | null
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          provider?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          status?: string
+          subject: string
+          template_key?: string | null
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json
+          provider?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          template_key?: string | null
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          html_content: string
+          id: string
+          key: string
+          name: string
+          subject: string
+          updated_at: string
+          variables: string[]
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          html_content?: string
+          id?: string
+          key: string
+          name: string
+          subject: string
+          updated_at?: string
+          variables?: string[]
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          html_content?: string
+          id?: string
+          key?: string
+          name?: string
+          subject?: string
+          updated_at?: string
+          variables?: string[]
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           completed_at: string | null
@@ -189,55 +270,85 @@ export type Database = {
       faqs: {
         Row: {
           answer: string
+          category: string | null
           created_at: string
           id: string
           published: boolean
           question: string
+          sort_order: number
           updated_at: string
         }
         Insert: {
           answer: string
+          category?: string | null
           created_at?: string
           id?: string
           published?: boolean
           question: string
+          sort_order?: number
           updated_at?: string
         }
         Update: {
           answer?: string
+          category?: string | null
           created_at?: string
           id?: string
           published?: boolean
           question?: string
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
       }
       news: {
         Row: {
+          category: string | null
           created_at: string
           description: string
+          excerpt: string | null
+          featured: boolean
+          gallery: string[]
           id: string
           image_url: string | null
           published: boolean
+          scheduled_at: string | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string | null
           title: string
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description: string
+          excerpt?: string | null
+          featured?: boolean
+          gallery?: string[]
           id?: string
           image_url?: string | null
           published?: boolean
+          scheduled_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string | null
           title: string
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string
+          excerpt?: string | null
+          featured?: boolean
+          gallery?: string[]
           id?: string
           image_url?: string | null
           published?: boolean
+          scheduled_at?: string | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string | null
           title?: string
           updated_at?: string
         }
@@ -313,31 +424,52 @@ export type Database = {
       }
       projects: {
         Row: {
+          category: string | null
           created_at: string
           description: string
+          featured: boolean
+          gallery: string[]
           id: string
           image_url: string | null
           published: boolean
+          repo_url: string | null
+          sort_order: number
+          status: string
           title: string
           updated_at: string
+          website_url: string | null
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description: string
+          featured?: boolean
+          gallery?: string[]
           id?: string
           image_url?: string | null
           published?: boolean
+          repo_url?: string | null
+          sort_order?: number
+          status?: string
           title: string
           updated_at?: string
+          website_url?: string | null
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string
+          featured?: boolean
+          gallery?: string[]
           id?: string
           image_url?: string | null
           published?: boolean
+          repo_url?: string | null
+          sort_order?: number
+          status?: string
           title?: string
           updated_at?: string
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -418,32 +550,128 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          company_address: string | null
+          company_email: string | null
+          company_logo_url: string | null
+          company_name: string
+          company_phone: string | null
+          created_at: string
+          extra: Json
+          favicon_url: string | null
+          id: string
+          maintenance_mode: boolean
+          og_image_url: string | null
+          registration_enabled: boolean
+          require_email_verification: boolean
+          seo_description: string
+          seo_title: string
+          singleton: boolean
+          social_facebook: string | null
+          social_github: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          social_youtube: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_address?: string | null
+          company_email?: string | null
+          company_logo_url?: string | null
+          company_name?: string
+          company_phone?: string | null
+          created_at?: string
+          extra?: Json
+          favicon_url?: string | null
+          id?: string
+          maintenance_mode?: boolean
+          og_image_url?: string | null
+          registration_enabled?: boolean
+          require_email_verification?: boolean
+          seo_description?: string
+          seo_title?: string
+          singleton?: boolean
+          social_facebook?: string | null
+          social_github?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_youtube?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_address?: string | null
+          company_email?: string | null
+          company_logo_url?: string | null
+          company_name?: string
+          company_phone?: string | null
+          created_at?: string
+          extra?: Json
+          favicon_url?: string | null
+          id?: string
+          maintenance_mode?: boolean
+          og_image_url?: string | null
+          registration_enabled?: boolean
+          require_email_verification?: boolean
+          seo_description?: string
+          seo_title?: string
+          singleton?: boolean
+          social_facebook?: string | null
+          social_github?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          social_youtube?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       team_members: {
         Row: {
+          active: boolean
+          bio: string | null
           created_at: string
           description: string | null
+          email: string | null
           id: string
           image_url: string | null
           name: string
           role: string
+          social_github: string | null
+          social_instagram: string | null
+          social_linkedin: string | null
+          sort_order: number
           updated_at: string
         }
         Insert: {
+          active?: boolean
+          bio?: string | null
           created_at?: string
           description?: string | null
+          email?: string | null
           id?: string
           image_url?: string | null
           name: string
           role: string
+          social_github?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Update: {
+          active?: boolean
+          bio?: string | null
           created_at?: string
           description?: string | null
+          email?: string | null
           id?: string
           image_url?: string | null
           name?: string
           role?: string
+          social_github?: string | null
+          social_instagram?: string | null
+          social_linkedin?: string | null
+          sort_order?: number
           updated_at?: string
         }
         Relationships: []
