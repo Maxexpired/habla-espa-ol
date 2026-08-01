@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/shared/PageHeader";
 import { LoadingState } from "@/components/dashboard/shared/LoadingState";
+import { RecentActivity, SystemStatus } from "@/components/dashboard/SystemOverview";
+
 
 const currency = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
 
@@ -229,6 +231,12 @@ export default function DashboardHome() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 lg:grid-cols-3 mt-6">
+        <RecentActivity />
+        <SystemStatus />
+      </div>
     </div>
+
   );
 }
