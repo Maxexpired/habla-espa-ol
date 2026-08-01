@@ -229,6 +229,12 @@ export default function DashboardHome() {
           )}
         </CardContent>
       </Card>
+
+      <div className="grid gap-4 lg:grid-cols-3 mt-6">
+        <RecentActivity />
+        <SystemStatus />
+      </div>
     </div>
+
   );
 }
