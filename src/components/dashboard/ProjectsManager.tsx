@@ -185,7 +185,85 @@ export const ProjectsManager = () => {
     return true;
   });
 
-  const columns: DataTableColumn<Project>[] = [
+  const duplicate = useMutation({
+    mutationFn: async (p: Project) => {
+      const { error } = await supabase.from("projects").insert({
+        title: `${p.title} (copia)`,
+        description: p.description,
+        image_url: p.image_url,
+        gallery: p.gallery ?? [],
+        category: p.category,
+        status: p.status,
+        featured: false,
+        website_url: p.website_url,
+        repo_url: p.repo_url,
+        sort_order: (p.sort_order ?? 0) + 1,
+        published: false,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Proyecto duplicado", description: "Se creó como borrador." });
+      invalidate();
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const archive = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from("projects").update({ status: "archived", published: false }).in("id", ids);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Proyecto archivado" });
+      invalidate();
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const all = projects || [];
+  const kpis = [
+    { label: "Total", value: all.length, icon: <FolderKanban className="h-4 w-4" /> },
+    { label: "En curso", value: all.filter((p) => p.status === "active").length, icon: <CheckCircle2 className="h-4 w-4" />, accent: "text-emerald-600" },
+    { label: "Finalizados", value: all.filter((p) => p.status === "completed").length, icon: <Archive className="h-4 w-4" /> },
+    { label: "Destacados", value: all.filter((p) => p.featured).length, icon: <Star className="h-4 w-4" />, accent: "text-amber-600" },
+    { label: "Publicados", value: all.filter((p) => p.published).length, icon: <ExternalLink className="h-4 w-4" />, accent: "text-blue-600" },
+  ];
+
+  const rowActions = (r: Project) => (
+    <RowActions
+      actions={[
+        { label: "Editar", icon: <Edit className="h-4 w-4" />, inline: true, onClick: () => openEdit(r) },
+        { label: "Duplicar", icon: <Copy className="h-4 w-4" />, onClick: () => duplicate.mutate(r) },
+        r.published
+          ? { label: "Despublicar", icon: <XCircle className="h-4 w-4" />, onClick: () => setPublished.mutate({ ids: [r.id], published: false }) }
+          : { label: "Publicar", icon: <CheckCircle2 className="h-4 w-4" />, onClick: () => setPublished.mutate({ ids: [r.id], published: true }) },
+        { label: "Ver sitio", icon: <ExternalLink className="h-4 w-4" />, hidden: !r.website_url, onClick: () => window.open(r.website_url!, "_blank", "noreferrer") },
+        { label: "Archivar", icon: <Archive className="h-4 w-4" />, hidden: r.status === "archived", onClick: () => archive.mutate([r.id]) },
+        { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => setToDelete([r.id]) },
+      ]}
+    />
+  );
+
+  const renderCard = (r: Project) => (
+    <div className="space-y-3">
+      <img src={r.image_url || "/placeholder.svg"} alt={r.title} loading="lazy" className="h-32 w-full rounded-2xl border object-cover" />
+      <div className="flex flex-wrap items-center gap-2">
+        <PublishBadge published={r.published} />
+        <StatusBadge label={statusLabels[r.status] || r.status} tone={r.status === "completed" ? "info" : r.status === "archived" ? "muted" : "neutral"} />
+        {r.featured && <StatusBadge label="Destacado" tone="warning" />}
+      </div>
+      <div>
+        <p className="font-semibold leading-tight line-clamp-2">{r.title}</p>
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{r.description}</p>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        {r.category ? `${r.category} · ` : ""}
+        {new Date(r.created_at).toLocaleDateString("es-CL")}
+      </p>
+    </div>
+  );
+
     {
       key: "title",
       header: "Proyecto",
