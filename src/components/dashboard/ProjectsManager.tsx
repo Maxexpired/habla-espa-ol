@@ -264,6 +264,7 @@ export const ProjectsManager = () => {
     </div>
   );
 
+  const columns: DataTableColumn<Project>[] = [
     {
       key: "title",
       header: "Proyecto",
