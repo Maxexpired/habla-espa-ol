@@ -326,6 +326,7 @@ export const NewsManager = () => {
 
   return (
     <div className="space-y-4">
+      <KpiGrid items={kpis} loading={isLoading} columns={5} />
       <DataTable
         data={filtered}
         columns={columns}
@@ -335,6 +336,22 @@ export const NewsManager = () => {
         exportFileName="noticias"
         searchPlaceholder="Buscar noticias..."
         searchFields={(r) => [r.title, r.description, r.category, r.slug]}
+        views={["table", "cards", "list"]}
+        renderCard={renderCard}
+        renderListItem={(r) => (
+          <div className="flex items-center gap-3">
+            <img src={r.image_url || "/placeholder.svg"} alt={r.title} loading="lazy" className="h-10 w-10 rounded-xl border object-cover" />
+            <div className="min-w-0">
+              <p className="truncate font-medium">{r.title}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {r.category ? `${r.category} · ` : ""}
+                {new Date(r.created_at).toLocaleDateString("es-CL")}
+              </p>
+            </div>
+            <div className="ml-auto"><PublishBadge published={r.published} scheduledAt={r.scheduled_at} /></div>
+          </div>
+        )}
+        onRowClick={openEdit}
         filters={[
           {
             key: "status",
@@ -360,23 +377,12 @@ export const NewsManager = () => {
           { label: "Despublicar", icon: <XCircle className="h-4 w-4" />, onClick: (rows) => setPublished.mutate({ ids: rows.map((r) => r.id), published: false }) },
           { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: (rows) => setToDelete(rows.map((r) => r.id)) },
         ]}
-        rowActions={(r) => (
-          <>
-            <Button size="sm" variant="ghost" onClick={() => setPreview(r)}>
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => setToDelete([r.id])}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </>
-        )}
+        rowActions={rowActions}
         emptyTitle="Sin noticias"
         emptyDescription="Crea la primera noticia para publicarla en el sitio."
         emptyAction={<Button onClick={openNew} className="rounded-2xl"><Plus className="h-4 w-4 mr-2" />Nueva noticia</Button>}
       />
+
 
       {/* Form dialog */}
       <Dialog open={open} onOpenChange={setOpen}>
