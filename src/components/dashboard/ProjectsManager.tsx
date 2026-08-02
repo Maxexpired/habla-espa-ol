@@ -405,16 +405,8 @@ export const ProjectsManager = () => {
           { label: "Despublicar", icon: <XCircle className="h-4 w-4" />, onClick: (rows) => setPublished.mutate({ ids: rows.map((r) => r.id), published: false }) },
           { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: (rows) => setToDelete(rows.map((r) => r.id)) },
         ]}
-        rowActions={(r) => (
-          <>
-            <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => setToDelete([r.id])}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </>
-        )}
+        rowActions={rowActions}
+
         emptyTitle="Sin proyectos"
         emptyAction={<Button onClick={openNew} className="rounded-2xl"><Plus className="h-4 w-4 mr-2" />Nuevo proyecto</Button>}
       />
