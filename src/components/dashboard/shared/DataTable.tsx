@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState, useEffect } from "react";
+import { ReactNode, useMemo, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,9 +36,17 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  Table as TableIcon,
+  LayoutGrid,
+  Rows3,
+  Columns3,
 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LoadingState } from "./LoadingState";
 import { EmptyState } from "./EmptyState";
+
+export type DataTableView = "table" | "cards" | "list" | "kanban";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -84,7 +92,35 @@ interface DataTableProps<T> {
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
+  /** Views supported by the module. Defaults to table only. */
+  views?: DataTableView[];
+  defaultView?: DataTableView;
+  /** Card renderer, required when "cards" view is enabled */
+  renderCard?: (row: T) => ReactNode;
+  /** Compact list renderer, required when "list" view is enabled */
+  renderListItem?: (row: T) => ReactNode;
+  /** Kanban grouping (prepared for future use) */
+  kanban?: {
+    columns: { key: string; label: string }[];
+    groupOf: (row: T) => string;
+  };
+  /** Called when the row body is clicked (opens the side panel) */
+  onRowClick?: (row: T) => void;
 }
+
+const viewIcons: Record<DataTableView, ReactNode> = {
+  table: <TableIcon className="h-4 w-4" />,
+  cards: <LayoutGrid className="h-4 w-4" />,
+  list: <Rows3 className="h-4 w-4" />,
+  kanban: <Columns3 className="h-4 w-4" />,
+};
+
+const viewLabels: Record<DataTableView, string> = {
+  table: "Tabla",
+  cards: "Tarjetas",
+  list: "Lista",
+  kanban: "Kanban",
+};
 
 export function DataTable<T>({
   data,
@@ -103,15 +139,38 @@ export function DataTable<T>({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  views = ["table"],
+  defaultView,
+  renderCard,
+  renderListItem,
+  kanban,
+  onRowClick,
 }: DataTableProps<T>) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(pageSize);
   const [selected, setSelected] = useState<string[]>([]);
+  const [view, setView] = useState<DataTableView>(defaultView ?? views[0] ?? "table");
+  const searchRef = useRef<HTMLInputElement>(null);
   const [hidden, setHidden] = useState<string[]>(
     columns.filter((c) => c.defaultHidden).map((c) => c.key)
   );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const editing =
+        el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (editing) return;
+      if (e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const visibleColumns = columns.filter((c) => !hidden.includes(c.key));
 
@@ -196,11 +255,15 @@ export function DataTable<T>({
           <div className="relative flex-1 min-w-[220px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={searchPlaceholder}
-              className="pl-9 rounded-2xl"
+              className="pl-9 pr-10 rounded-2xl transition-shadow focus-visible:shadow-sm"
             />
+            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+              F
+            </kbd>
           </div>
         )}
 
@@ -250,8 +313,30 @@ export function DataTable<T>({
           <Download className="h-4 w-4 mr-2" /> CSV
         </Button>
 
+
+        {views.length > 1 && (
+          <ToggleGroup
+            type="single"
+            value={view}
+            onValueChange={(v) => v && setView(v as DataTableView)}
+            className="rounded-2xl border bg-background p-0.5"
+          >
+            {views.map((v) => (
+              <Tooltip key={v}>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem value={v} className="h-8 w-8 rounded-xl" aria-label={viewLabels[v]}>
+                    {viewIcons[v]}
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>{viewLabels[v]}</TooltipContent>
+              </Tooltip>
+            ))}
+          </ToggleGroup>
+        )}
+
         {toolbarActions}
       </div>
+
 
       {/* Bulk bar */}
       {bulkActions.length > 0 && selected.length > 0 && (
@@ -301,7 +386,76 @@ export function DataTable<T>({
           action={emptyAction}
         />
       ) : (
-        <div className="rounded-3xl border overflow-hidden">
+        <div className="rounded-3xl border overflow-hidden bg-background">
+          {(view === "cards" && renderCard) ? (
+            <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
+              {pageRows.map((row) => (
+                <div
+                  key={getRowId(row)}
+                  className="group/row rounded-3xl border bg-background p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 animate-fade-in"
+                >
+                  <div
+                    className={onRowClick ? "cursor-pointer" : ""}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {renderCard(row)}
+                  </div>
+                  {rowActions && (
+                    <div className="mt-3 border-t pt-2">{rowActions(row)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (view === "list" && renderListItem) ? (
+            <ul className="divide-y">
+              {pageRows.map((row) => (
+                <li
+                  key={getRowId(row)}
+                  className="group/row flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
+                >
+                  <div
+                    className={`min-w-0 flex-1 ${onRowClick ? "cursor-pointer" : ""}`}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {renderListItem(row)}
+                  </div>
+                  {rowActions && rowActions(row)}
+                </li>
+              ))}
+            </ul>
+          ) : (view === "kanban" && kanban && renderCard) ? (
+            <div className="flex gap-4 overflow-x-auto p-4">
+              {kanban.columns.map((col) => {
+                const rows = filtered.filter((r) => kanban.groupOf(r) === col.key);
+                return (
+                  <div key={col.key} className="w-72 shrink-0 space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {col.label}
+                      </p>
+                      <Badge variant="secondary">{rows.length}</Badge>
+                    </div>
+                    <div className="space-y-3">
+                      {rows.map((row) => (
+                        <div
+                          key={getRowId(row)}
+                          className="group/row rounded-2xl border bg-background p-3 transition-all hover:shadow-md"
+                          onClick={() => onRowClick?.(row)}
+                        >
+                          {renderCard(row)}
+                        </div>
+                      ))}
+                      {rows.length === 0 && (
+                        <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">
+                          Sin elementos
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -317,7 +471,7 @@ export function DataTable<T>({
                         <button
                           type="button"
                           onClick={() => toggleSort(c.key)}
-                          className="inline-flex items-center gap-1 hover:text-foreground"
+                          className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                         >
                           {c.header}
                           {sort?.key === c.key ? (
@@ -342,7 +496,7 @@ export function DataTable<T>({
                 {pageRows.map((row) => {
                   const id = getRowId(row);
                   return (
-                    <TableRow key={id}>
+                    <TableRow key={id} className="group/row transition-colors hover:bg-muted/40">
                       {bulkActions.length > 0 && (
                         <TableCell>
                           <Checkbox
@@ -356,13 +510,17 @@ export function DataTable<T>({
                         </TableCell>
                       )}
                       {visibleColumns.map((c) => (
-                        <TableCell key={c.key} className={c.className}>
+                        <TableCell
+                          key={c.key}
+                          className={`${c.className ?? ""} ${onRowClick ? "cursor-pointer" : ""}`}
+                          onClick={() => onRowClick?.(row)}
+                        >
                           {c.cell(row)}
                         </TableCell>
                       ))}
                       {rowActions && (
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">{rowActions(row)}</div>
+                          <div className="flex justify-end gap-1">{rowActions(row)}</div>
                         </TableCell>
                       )}
                     </TableRow>
@@ -371,6 +529,8 @@ export function DataTable<T>({
               </TableBody>
             </Table>
           </div>
+          )}
+
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3 text-sm">
             <span className="text-muted-foreground">

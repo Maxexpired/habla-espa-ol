@@ -16,11 +16,27 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Edit, Eye, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Edit,
+  Eye,
+  CheckCircle2,
+  XCircle,
+  Copy,
+  Newspaper,
+  CalendarClock,
+  FileText,
+  Star,
+} from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImageUploadField } from "@/components/dashboard/ImageUploadField";
 import { DataTable, DataTableColumn } from "@/components/dashboard/shared/DataTable";
 import { ConfirmDialog } from "@/components/dashboard/shared/ConfirmDialog";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
+import { RowActions } from "@/components/dashboard/shared/RowActions";
+import { EditSheet } from "@/components/dashboard/shared/EditSheet";
+import { PublishBadge, StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 
 interface News {
   id: string;
@@ -142,6 +158,30 @@ export const NewsManager = () => {
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const duplicate = useMutation({
+    mutationFn: async (n: News) => {
+      const { error } = await supabase.from("news").insert({
+        title: `${n.title} (copia)`,
+        description: n.description,
+        excerpt: n.excerpt,
+        slug: `${n.slug || slugify(n.title)}-copia-${Date.now().toString().slice(-4)}`,
+        image_url: n.image_url,
+        gallery: n.gallery ?? [],
+        category: n.category,
+        featured: false,
+        published: false,
+        seo_title: n.seo_title,
+        seo_description: n.seo_description,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Noticia duplicada", description: "Se creó como borrador." });
+      invalidate();
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
   const openNew = () => {
     setEditing(null);
     setFormData(emptyForm);
@@ -175,6 +215,30 @@ export const NewsManager = () => {
     return true;
   });
 
+  const all = news || [];
+  const kpis = [
+    { label: "Total", value: all.length, icon: <Newspaper className="h-4 w-4" /> },
+    { label: "Publicadas", value: all.filter((n) => n.published).length, icon: <CheckCircle2 className="h-4 w-4" />, accent: "text-emerald-600" },
+    { label: "Borradores", value: all.filter((n) => !n.published && !n.scheduled_at).length, icon: <FileText className="h-4 w-4" /> },
+    { label: "Programadas", value: all.filter((n) => !!n.scheduled_at && !n.published).length, icon: <CalendarClock className="h-4 w-4" />, accent: "text-blue-600" },
+    { label: "Destacadas", value: all.filter((n) => n.featured).length, icon: <Star className="h-4 w-4" />, accent: "text-amber-600" },
+  ];
+
+  const rowActions = (r: News) => (
+    <RowActions
+      actions={[
+        { label: "Vista previa", icon: <Eye className="h-4 w-4" />, inline: true, onClick: () => setPreview(r) },
+        { label: "Editar", icon: <Edit className="h-4 w-4" />, inline: true, onClick: () => openEdit(r) },
+        { label: "Duplicar", icon: <Copy className="h-4 w-4" />, onClick: () => duplicate.mutate(r) },
+        r.published
+          ? { label: "Despublicar", icon: <XCircle className="h-4 w-4" />, onClick: () => setPublished.mutate({ ids: [r.id], published: false }) }
+          : { label: "Publicar", icon: <CheckCircle2 className="h-4 w-4" />, onClick: () => setPublished.mutate({ ids: [r.id], published: true }) },
+        { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => setToDelete([r.id]) },
+      ]}
+    />
+  );
+
+
   const columns: DataTableColumn<News>[] = [
     {
       key: "title",
@@ -207,21 +271,13 @@ export const NewsManager = () => {
       header: "Estado",
       sortable: true,
       value: (r) => (r.published ? "Publicado" : r.scheduled_at ? "Programado" : "Borrador"),
-      cell: (r) =>
-        r.published ? (
-          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">Publicado</Badge>
-        ) : r.scheduled_at ? (
-          <Badge className="bg-blue-100 text-blue-700 border-blue-200" variant="outline">Programado</Badge>
-        ) : (
-          <Badge variant="secondary">Borrador</Badge>
-        ),
+      cell: (r) => <PublishBadge published={r.published} scheduledAt={r.scheduled_at} />,
     },
     {
       key: "featured",
       header: "Destacada",
       value: (r) => (r.featured ? "Sí" : "No"),
-      cell: (r) => (r.featured ? <Badge variant="outline">Sí</Badge> : <span className="text-muted-foreground">—</span>),
-      defaultHidden: true,
+      cell: (r) => (r.featured ? <StatusBadge label="Destacada" tone="warning" /> : <span className="text-muted-foreground">—</span>),
     },
     {
       key: "scheduled_at",
@@ -236,12 +292,41 @@ export const NewsManager = () => {
       header: "Creada",
       sortable: true,
       value: (r) => r.created_at,
-      cell: (r) => new Date(r.created_at).toLocaleDateString("es-CL"),
+      cell: (r) => (
+        <span className="text-sm text-muted-foreground">
+          {new Date(r.created_at).toLocaleDateString("es-CL")}
+        </span>
+      ),
     },
   ];
 
+  const renderCard = (r: News) => (
+    <div className="space-y-3">
+      <img
+        src={r.image_url || "/placeholder.svg"}
+        alt={r.title}
+        loading="lazy"
+        className="h-32 w-full rounded-2xl border object-cover"
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <PublishBadge published={r.published} scheduledAt={r.scheduled_at} />
+        {r.category && <Badge variant="outline">{r.category}</Badge>}
+        {r.featured && <StatusBadge label="Destacada" tone="warning" />}
+      </div>
+      <div>
+        <p className="font-semibold leading-tight line-clamp-2">{r.title}</p>
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{r.excerpt || r.description}</p>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Creada el {new Date(r.created_at).toLocaleDateString("es-CL")}
+      </p>
+    </div>
+  );
+
+
   return (
     <div className="space-y-4">
+      <KpiGrid items={kpis} loading={isLoading} columns={5} />
       <DataTable
         data={filtered}
         columns={columns}
@@ -251,6 +336,22 @@ export const NewsManager = () => {
         exportFileName="noticias"
         searchPlaceholder="Buscar noticias..."
         searchFields={(r) => [r.title, r.description, r.category, r.slug]}
+        views={["table", "cards", "list"]}
+        renderCard={renderCard}
+        renderListItem={(r) => (
+          <div className="flex items-center gap-3">
+            <img src={r.image_url || "/placeholder.svg"} alt={r.title} loading="lazy" className="h-10 w-10 rounded-xl border object-cover" />
+            <div className="min-w-0">
+              <p className="truncate font-medium">{r.title}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {r.category ? `${r.category} · ` : ""}
+                {new Date(r.created_at).toLocaleDateString("es-CL")}
+              </p>
+            </div>
+            <div className="ml-auto"><PublishBadge published={r.published} scheduledAt={r.scheduled_at} /></div>
+          </div>
+        )}
+        onRowClick={openEdit}
         filters={[
           {
             key: "status",
@@ -276,38 +377,41 @@ export const NewsManager = () => {
           { label: "Despublicar", icon: <XCircle className="h-4 w-4" />, onClick: (rows) => setPublished.mutate({ ids: rows.map((r) => r.id), published: false }) },
           { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: (rows) => setToDelete(rows.map((r) => r.id)) },
         ]}
-        rowActions={(r) => (
-          <>
-            <Button size="sm" variant="ghost" onClick={() => setPreview(r)}>
-              <Eye className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => openEdit(r)}>
-              <Edit className="h-4 w-4" />
-            </Button>
-            <Button size="sm" variant="destructive" onClick={() => setToDelete([r.id])}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </>
-        )}
+        rowActions={rowActions}
         emptyTitle="Sin noticias"
         emptyDescription="Crea la primera noticia para publicarla en el sitio."
         emptyAction={<Button onClick={openNew} className="rounded-2xl"><Plus className="h-4 w-4 mr-2" />Nueva noticia</Button>}
       />
 
-      {/* Form dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar noticia" : "Nueva noticia"}</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              save.mutate();
-            }}
-            className="space-y-4"
-          >
+
+      {/* Side edit panel */}
+      <EditSheet
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? "Editar noticia" : "Nueva noticia"}
+        description={editing ? "Los cambios se aplican al guardar (Ctrl + S)." : "Completa los datos de la publicación."}
+        onSubmit={() => save.mutate()}
+        saving={save.isPending || uploading}
+        submitLabel={editing ? "Guardar cambios" : "Crear noticia"}
+        width="xl"
+        aside={
+          <div className="flex items-start gap-3">
+            {formData.image_url && (
+              <img src={formData.image_url} alt="" className="h-16 w-16 rounded-2xl border object-cover" />
+            )}
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Vista previa</p>
+              <p className="truncate font-semibold">{formData.title || "Sin título"}</p>
+              <p className="line-clamp-2 text-xs text-muted-foreground">
+                {formData.excerpt || formData.description || "Sin descripción"}
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-4">
             <Tabs defaultValue="content">
+
               <TabsList className="rounded-2xl">
                 <TabsTrigger value="content">Contenido</TabsTrigger>
                 <TabsTrigger value="media">Galería</TabsTrigger>
@@ -426,16 +530,9 @@ export const NewsManager = () => {
                 </div>
               </TabsContent>
             </Tabs>
+        </div>
+      </EditSheet>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={save.isPending || uploading}>
-                {editing ? "Guardar cambios" : "Crear noticia"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Preview dialog */}
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
