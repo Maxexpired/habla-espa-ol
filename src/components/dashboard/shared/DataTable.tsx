@@ -386,7 +386,76 @@ export function DataTable<T>({
           action={emptyAction}
         />
       ) : (
-        <div className="rounded-3xl border overflow-hidden">
+        <div className="rounded-3xl border overflow-hidden bg-background">
+          {(view === "cards" && renderCard) ? (
+            <div className="grid gap-4 p-4 sm:grid-cols-2 xl:grid-cols-3">
+              {pageRows.map((row) => (
+                <div
+                  key={getRowId(row)}
+                  className="group/row rounded-3xl border bg-background p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 animate-fade-in"
+                >
+                  <div
+                    className={onRowClick ? "cursor-pointer" : ""}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {renderCard(row)}
+                  </div>
+                  {rowActions && (
+                    <div className="mt-3 border-t pt-2">{rowActions(row)}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (view === "list" && renderListItem) ? (
+            <ul className="divide-y">
+              {pageRows.map((row) => (
+                <li
+                  key={getRowId(row)}
+                  className="group/row flex items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/40"
+                >
+                  <div
+                    className={`min-w-0 flex-1 ${onRowClick ? "cursor-pointer" : ""}`}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {renderListItem(row)}
+                  </div>
+                  {rowActions && rowActions(row)}
+                </li>
+              ))}
+            </ul>
+          ) : (view === "kanban" && kanban && renderCard) ? (
+            <div className="flex gap-4 overflow-x-auto p-4">
+              {kanban.columns.map((col) => {
+                const rows = filtered.filter((r) => kanban.groupOf(r) === col.key);
+                return (
+                  <div key={col.key} className="w-72 shrink-0 space-y-3">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {col.label}
+                      </p>
+                      <Badge variant="secondary">{rows.length}</Badge>
+                    </div>
+                    <div className="space-y-3">
+                      {rows.map((row) => (
+                        <div
+                          key={getRowId(row)}
+                          className="group/row rounded-2xl border bg-background p-3 transition-all hover:shadow-md"
+                          onClick={() => onRowClick?.(row)}
+                        >
+                          {renderCard(row)}
+                        </div>
+                      ))}
+                      {rows.length === 0 && (
+                        <p className="rounded-2xl border border-dashed p-4 text-center text-xs text-muted-foreground">
+                          Sin elementos
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -402,7 +471,7 @@ export function DataTable<T>({
                         <button
                           type="button"
                           onClick={() => toggleSort(c.key)}
-                          className="inline-flex items-center gap-1 hover:text-foreground"
+                          className="inline-flex items-center gap-1 transition-colors hover:text-foreground"
                         >
                           {c.header}
                           {sort?.key === c.key ? (
@@ -427,7 +496,7 @@ export function DataTable<T>({
                 {pageRows.map((row) => {
                   const id = getRowId(row);
                   return (
-                    <TableRow key={id}>
+                    <TableRow key={id} className="group/row transition-colors hover:bg-muted/40">
                       {bulkActions.length > 0 && (
                         <TableCell>
                           <Checkbox
@@ -441,13 +510,17 @@ export function DataTable<T>({
                         </TableCell>
                       )}
                       {visibleColumns.map((c) => (
-                        <TableCell key={c.key} className={c.className}>
+                        <TableCell
+                          key={c.key}
+                          className={`${c.className ?? ""} ${onRowClick ? "cursor-pointer" : ""}`}
+                          onClick={() => onRowClick?.(row)}
+                        >
                           {c.cell(row)}
                         </TableCell>
                       ))}
                       {rowActions && (
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">{rowActions(row)}</div>
+                          <div className="flex justify-end gap-1">{rowActions(row)}</div>
                         </TableCell>
                       )}
                     </TableRow>
@@ -456,6 +529,8 @@ export function DataTable<T>({
               </TableBody>
             </Table>
           </div>
+          )}
+
 
           <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-muted/20 px-4 py-3 text-sm">
             <span className="text-muted-foreground">
