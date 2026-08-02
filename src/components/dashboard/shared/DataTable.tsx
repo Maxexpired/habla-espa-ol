@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useState, useEffect } from "react";
+import { ReactNode, useMemo, useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -36,9 +36,17 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  Table as TableIcon,
+  LayoutGrid,
+  Rows3,
+  Columns3,
 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { LoadingState } from "./LoadingState";
 import { EmptyState } from "./EmptyState";
+
+export type DataTableView = "table" | "cards" | "list" | "kanban";
 
 export interface DataTableColumn<T> {
   key: string;
