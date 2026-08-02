@@ -313,9 +313,6 @@ export function DataTable<T>({
           <Download className="h-4 w-4 mr-2" /> CSV
         </Button>
 
-        <Button variant="outline" size="sm" className="rounded-2xl" onClick={exportCsv}>
-          <Download className="h-4 w-4 mr-2" /> CSV
-        </Button>
 
         {views.length > 1 && (
           <ToggleGroup
