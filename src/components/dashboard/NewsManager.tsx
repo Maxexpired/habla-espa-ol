@@ -271,21 +271,13 @@ export const NewsManager = () => {
       header: "Estado",
       sortable: true,
       value: (r) => (r.published ? "Publicado" : r.scheduled_at ? "Programado" : "Borrador"),
-      cell: (r) =>
-        r.published ? (
-          <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200" variant="outline">Publicado</Badge>
-        ) : r.scheduled_at ? (
-          <Badge className="bg-blue-100 text-blue-700 border-blue-200" variant="outline">Programado</Badge>
-        ) : (
-          <Badge variant="secondary">Borrador</Badge>
-        ),
+      cell: (r) => <PublishBadge published={r.published} scheduledAt={r.scheduled_at} />,
     },
     {
       key: "featured",
       header: "Destacada",
       value: (r) => (r.featured ? "Sí" : "No"),
-      cell: (r) => (r.featured ? <Badge variant="outline">Sí</Badge> : <span className="text-muted-foreground">—</span>),
-      defaultHidden: true,
+      cell: (r) => (r.featured ? <StatusBadge label="Destacada" tone="warning" /> : <span className="text-muted-foreground">—</span>),
     },
     {
       key: "scheduled_at",
@@ -300,9 +292,37 @@ export const NewsManager = () => {
       header: "Creada",
       sortable: true,
       value: (r) => r.created_at,
-      cell: (r) => new Date(r.created_at).toLocaleDateString("es-CL"),
+      cell: (r) => (
+        <span className="text-sm text-muted-foreground">
+          {new Date(r.created_at).toLocaleDateString("es-CL")}
+        </span>
+      ),
     },
   ];
+
+  const renderCard = (r: News) => (
+    <div className="space-y-3">
+      <img
+        src={r.image_url || "/placeholder.svg"}
+        alt={r.title}
+        loading="lazy"
+        className="h-32 w-full rounded-2xl border object-cover"
+      />
+      <div className="flex flex-wrap items-center gap-2">
+        <PublishBadge published={r.published} scheduledAt={r.scheduled_at} />
+        {r.category && <Badge variant="outline">{r.category}</Badge>}
+        {r.featured && <StatusBadge label="Destacada" tone="warning" />}
+      </div>
+      <div>
+        <p className="font-semibold leading-tight line-clamp-2">{r.title}</p>
+        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">{r.excerpt || r.description}</p>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Creada el {new Date(r.created_at).toLocaleDateString("es-CL")}
+      </p>
+    </div>
+  );
+
 
   return (
     <div className="space-y-4">
