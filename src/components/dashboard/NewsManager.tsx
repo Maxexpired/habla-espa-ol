@@ -384,20 +384,34 @@ export const NewsManager = () => {
       />
 
 
-      {/* Form dialog */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar noticia" : "Nueva noticia"}</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              save.mutate();
-            }}
-            className="space-y-4"
-          >
+      {/* Side edit panel */}
+      <EditSheet
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? "Editar noticia" : "Nueva noticia"}
+        description={editing ? "Los cambios se aplican al guardar (Ctrl + S)." : "Completa los datos de la publicación."}
+        onSubmit={() => save.mutate()}
+        saving={save.isPending || uploading}
+        submitLabel={editing ? "Guardar cambios" : "Crear noticia"}
+        width="xl"
+        aside={
+          <div className="flex items-start gap-3">
+            {formData.image_url && (
+              <img src={formData.image_url} alt="" className="h-16 w-16 rounded-2xl border object-cover" />
+            )}
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Vista previa</p>
+              <p className="truncate font-semibold">{formData.title || "Sin título"}</p>
+              <p className="line-clamp-2 text-xs text-muted-foreground">
+                {formData.excerpt || formData.description || "Sin descripción"}
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <div className="space-y-4">
             <Tabs defaultValue="content">
+
               <TabsList className="rounded-2xl">
                 <TabsTrigger value="content">Contenido</TabsTrigger>
                 <TabsTrigger value="media">Galería</TabsTrigger>
