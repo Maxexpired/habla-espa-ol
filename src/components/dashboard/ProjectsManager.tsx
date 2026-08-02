@@ -323,18 +323,30 @@ export const ProjectsManager = () => {
         emptyAction={<Button onClick={openNew} className="rounded-2xl"><Plus className="h-4 w-4 mr-2" />Nuevo proyecto</Button>}
       />
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar proyecto" : "Nuevo proyecto"}</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              save.mutate();
-            }}
-            className="space-y-4"
-          >
+      <EditSheet
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? "Editar proyecto" : "Nuevo proyecto"}
+        description="Guarda con Ctrl + S o cierra con Esc."
+        onSubmit={() => save.mutate()}
+        saving={save.isPending || uploading}
+        submitLabel={editing ? "Guardar cambios" : "Crear proyecto"}
+        width="xl"
+        aside={
+          <div className="flex items-start gap-3">
+            {formData.image_url && (
+              <img src={formData.image_url} alt="" className="h-16 w-16 rounded-2xl border object-cover" />
+            )}
+            <div className="min-w-0">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Vista previa</p>
+              <p className="truncate font-semibold">{formData.title || "Sin título"}</p>
+              <p className="line-clamp-2 text-xs text-muted-foreground">{formData.description || "Sin descripción"}</p>
+            </div>
+          </div>
+        }
+      >
+          <div className="space-y-4">
+
             <div className="space-y-2">
               <Label>Título</Label>
               <Input value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required />
