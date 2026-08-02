@@ -255,11 +255,15 @@ export function DataTable<T>({
           <div className="relative flex-1 min-w-[220px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
+              ref={searchRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={searchPlaceholder}
-              className="pl-9 rounded-2xl"
+              className="pl-9 pr-10 rounded-2xl transition-shadow focus-visible:shadow-sm"
             />
+            <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline rounded bg-muted px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground">
+              F
+            </kbd>
           </div>
         )}
 
