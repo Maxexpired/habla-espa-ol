@@ -92,7 +92,35 @@ interface DataTableProps<T> {
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
+  /** Views supported by the module. Defaults to table only. */
+  views?: DataTableView[];
+  defaultView?: DataTableView;
+  /** Card renderer, required when "cards" view is enabled */
+  renderCard?: (row: T) => ReactNode;
+  /** Compact list renderer, required when "list" view is enabled */
+  renderListItem?: (row: T) => ReactNode;
+  /** Kanban grouping (prepared for future use) */
+  kanban?: {
+    columns: { key: string; label: string }[];
+    groupOf: (row: T) => string;
+  };
+  /** Called when the row body is clicked (opens the side panel) */
+  onRowClick?: (row: T) => void;
 }
+
+const viewIcons: Record<DataTableView, ReactNode> = {
+  table: <TableIcon className="h-4 w-4" />,
+  cards: <LayoutGrid className="h-4 w-4" />,
+  list: <Rows3 className="h-4 w-4" />,
+  kanban: <Columns3 className="h-4 w-4" />,
+};
+
+const viewLabels: Record<DataTableView, string> = {
+  table: "Tabla",
+  cards: "Tarjetas",
+  list: "Lista",
+  kanban: "Kanban",
+};
 
 export function DataTable<T>({
   data,
@@ -111,15 +139,38 @@ export function DataTable<T>({
   emptyTitle,
   emptyDescription,
   emptyAction,
+  views = ["table"],
+  defaultView,
+  renderCard,
+  renderListItem,
+  kanban,
+  onRowClick,
 }: DataTableProps<T>) {
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(pageSize);
   const [selected, setSelected] = useState<string[]>([]);
+  const [view, setView] = useState<DataTableView>(defaultView ?? views[0] ?? "table");
+  const searchRef = useRef<HTMLInputElement>(null);
   const [hidden, setHidden] = useState<string[]>(
     columns.filter((c) => c.defaultHidden).map((c) => c.key)
   );
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      const editing =
+        el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (editing) return;
+      if (e.key.toLowerCase() === "f" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const visibleColumns = columns.filter((c) => !hidden.includes(c.key));
 
