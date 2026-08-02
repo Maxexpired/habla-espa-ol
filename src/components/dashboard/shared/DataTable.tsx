@@ -313,8 +313,33 @@ export function DataTable<T>({
           <Download className="h-4 w-4 mr-2" /> CSV
         </Button>
 
+        <Button variant="outline" size="sm" className="rounded-2xl" onClick={exportCsv}>
+          <Download className="h-4 w-4 mr-2" /> CSV
+        </Button>
+
+        {views.length > 1 && (
+          <ToggleGroup
+            type="single"
+            value={view}
+            onValueChange={(v) => v && setView(v as DataTableView)}
+            className="rounded-2xl border bg-background p-0.5"
+          >
+            {views.map((v) => (
+              <Tooltip key={v}>
+                <TooltipTrigger asChild>
+                  <ToggleGroupItem value={v} className="h-8 w-8 rounded-xl" aria-label={viewLabels[v]}>
+                    {viewIcons[v]}
+                  </ToggleGroupItem>
+                </TooltipTrigger>
+                <TooltipContent>{viewLabels[v]}</TooltipContent>
+              </Tooltip>
+            ))}
+          </ToggleGroup>
+        )}
+
         {toolbarActions}
       </div>
+
 
       {/* Bulk bar */}
       {bulkActions.length > 0 && selected.length > 0 && (
