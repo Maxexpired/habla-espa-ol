@@ -345,6 +345,7 @@ export const ProjectsManager = () => {
 
   return (
     <div className="space-y-4">
+      <KpiGrid items={kpis} loading={isLoading} />
       <DataTable
         data={filtered}
         columns={columns}
@@ -354,6 +355,22 @@ export const ProjectsManager = () => {
         exportFileName="proyectos"
         searchPlaceholder="Buscar proyectos..."
         searchFields={(r) => [r.title, r.description, r.category]}
+        views={["table", "cards", "list"]}
+        renderCard={renderCard}
+        renderListItem={(r) => (
+          <div className="flex items-center gap-3">
+            <img src={r.image_url || "/placeholder.svg"} alt={r.title} loading="lazy" className="h-10 w-10 rounded-xl border object-cover" />
+            <div className="min-w-0">
+              <p className="truncate font-medium">{r.title}</p>
+              <p className="truncate text-xs text-muted-foreground">
+                {r.category ? `${r.category} · ` : ""}
+                {statusLabels[r.status] || r.status}
+              </p>
+            </div>
+            <div className="ml-auto"><PublishBadge published={r.published} /></div>
+          </div>
+        )}
+        onRowClick={openEdit}
         filters={[
           {
             key: "status",
