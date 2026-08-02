@@ -16,11 +16,27 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Edit, Eye, CheckCircle2, XCircle } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Edit,
+  Eye,
+  CheckCircle2,
+  XCircle,
+  Copy,
+  Newspaper,
+  CalendarClock,
+  FileText,
+  Star,
+} from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImageUploadField } from "@/components/dashboard/ImageUploadField";
 import { DataTable, DataTableColumn } from "@/components/dashboard/shared/DataTable";
 import { ConfirmDialog } from "@/components/dashboard/shared/ConfirmDialog";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
+import { RowActions } from "@/components/dashboard/shared/RowActions";
+import { EditSheet } from "@/components/dashboard/shared/EditSheet";
+import { PublishBadge, StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 
 interface News {
   id: string;
