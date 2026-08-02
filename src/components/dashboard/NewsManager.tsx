@@ -158,6 +158,30 @@ export const NewsManager = () => {
     onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const duplicate = useMutation({
+    mutationFn: async (n: News) => {
+      const { error } = await supabase.from("news").insert({
+        title: `${n.title} (copia)`,
+        description: n.description,
+        excerpt: n.excerpt,
+        slug: `${n.slug || slugify(n.title)}-copia-${Date.now().toString().slice(-4)}`,
+        image_url: n.image_url,
+        gallery: n.gallery ?? [],
+        category: n.category,
+        featured: false,
+        published: false,
+        seo_title: n.seo_title,
+        seo_description: n.seo_description,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({ title: "Noticia duplicada", description: "Se creó como borrador." });
+      invalidate();
+    },
+    onError: (e: Error) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
   const openNew = () => {
     setEditing(null);
     setFormData(emptyForm);
@@ -190,6 +214,30 @@ export const NewsManager = () => {
     if (statusFilter === "featured") return n.featured;
     return true;
   });
+
+  const all = news || [];
+  const kpis = [
+    { label: "Total", value: all.length, icon: <Newspaper className="h-4 w-4" /> },
+    { label: "Publicadas", value: all.filter((n) => n.published).length, icon: <CheckCircle2 className="h-4 w-4" />, accent: "text-emerald-600" },
+    { label: "Borradores", value: all.filter((n) => !n.published && !n.scheduled_at).length, icon: <FileText className="h-4 w-4" /> },
+    { label: "Programadas", value: all.filter((n) => !!n.scheduled_at && !n.published).length, icon: <CalendarClock className="h-4 w-4" />, accent: "text-blue-600" },
+    { label: "Destacadas", value: all.filter((n) => n.featured).length, icon: <Star className="h-4 w-4" />, accent: "text-amber-600" },
+  ];
+
+  const rowActions = (r: News) => (
+    <RowActions
+      actions={[
+        { label: "Vista previa", icon: <Eye className="h-4 w-4" />, inline: true, onClick: () => setPreview(r) },
+        { label: "Editar", icon: <Edit className="h-4 w-4" />, inline: true, onClick: () => openEdit(r) },
+        { label: "Duplicar", icon: <Copy className="h-4 w-4" />, onClick: () => duplicate.mutate(r) },
+        r.published
+          ? { label: "Despublicar", icon: <XCircle className="h-4 w-4" />, onClick: () => setPublished.mutate({ ids: [r.id], published: false }) }
+          : { label: "Publicar", icon: <CheckCircle2 className="h-4 w-4" />, onClick: () => setPublished.mutate({ ids: [r.id], published: true }) },
+        { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => setToDelete([r.id]) },
+      ]}
+    />
+  );
+
 
   const columns: DataTableColumn<News>[] = [
     {
