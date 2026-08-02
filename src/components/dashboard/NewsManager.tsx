@@ -530,16 +530,9 @@ export const NewsManager = () => {
                 </div>
               </TabsContent>
             </Tabs>
+        </div>
+      </EditSheet>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={save.isPending || uploading}>
-                {editing ? "Guardar cambios" : "Crear noticia"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Preview dialog */}
       <Dialog open={!!preview} onOpenChange={(o) => !o && setPreview(null)}>
