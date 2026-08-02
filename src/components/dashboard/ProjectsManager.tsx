@@ -8,13 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -22,11 +15,26 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { Plus, Trash2, Edit, CheckCircle2, XCircle, ExternalLink } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Edit,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
+  Copy,
+  FolderKanban,
+  Star,
+  Archive,
+} from "lucide-react";
 import { useImageUpload } from "@/hooks/useImageUpload";
 import { ImageUploadField } from "@/components/dashboard/ImageUploadField";
 import { DataTable, DataTableColumn } from "@/components/dashboard/shared/DataTable";
 import { ConfirmDialog } from "@/components/dashboard/shared/ConfirmDialog";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
+import { RowActions } from "@/components/dashboard/shared/RowActions";
+import { EditSheet } from "@/components/dashboard/shared/EditSheet";
+import { PublishBadge, StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 
 interface Project {
   id: string;
