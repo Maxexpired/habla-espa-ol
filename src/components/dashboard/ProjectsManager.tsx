@@ -432,13 +432,9 @@ export const ProjectsManager = () => {
               </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={save.isPending || uploading}>{editing ? "Guardar cambios" : "Crear proyecto"}</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+          </div>
+      </EditSheet>
+
 
       <ConfirmDialog
         open={!!toDelete}
