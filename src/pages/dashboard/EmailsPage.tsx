@@ -4,8 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/dashboard/shared/PageHeader";
 import { DataTable, DataTableColumn } from "@/components/dashboard/shared/DataTable";
 import { ConfirmDialog } from "@/components/dashboard/shared/ConfirmDialog";
-import { StatCard } from "@/components/dashboard/shared/StatCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
+import { EditSheet } from "@/components/dashboard/shared/EditSheet";
+import { RowActions } from "@/components/dashboard/shared/RowActions";
+import { StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -15,7 +17,10 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, Plus, Edit, Copy, Trash2, Send, FileText, History } from "lucide-react";
+import {
+  Mail, Plus, Edit, Copy, Trash2, Send, FileText, History,
+  CheckCircle2, XCircle, Wand2, Eye,
+} from "lucide-react";
 
 interface Template {
   id: string;
@@ -52,15 +57,23 @@ const EMPTY = {
   active: false,
 };
 
-const statusBadge = (s: string) => {
-  const map: Record<string, string> = {
-    sent: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    pending: "bg-amber-100 text-amber-700 border-amber-200",
-    error: "bg-red-100 text-red-700 border-red-200",
-    failed: "bg-red-100 text-red-700 border-red-200",
-  };
-  const labels: Record<string, string> = { sent: "Enviado", pending: "Pendiente", error: "Error", failed: "Fallido" };
-  return <Badge variant="outline" className={map[s] ?? ""}>{labels[s] ?? s}</Badge>;
+const logStatusTone = (s: string): "success" | "warning" | "danger" | "neutral" => {
+  if (s === "sent") return "success";
+  if (s === "pending") return "warning";
+  if (s === "error" || s === "failed") return "danger";
+  return "neutral";
+};
+
+const logLabels: Record<string, string> = { sent: "Enviado", pending: "Pendiente", error: "Error", failed: "Fallido" };
+
+// Very basic sanitizer for the live preview: strips script/style/event-handler
+// attributes so admin-authored HTML can't execute JS inside the dashboard.
+const sanitizeHtml = (html: string) => {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/ on\w+="[^"]*"/gi, "")
+    .replace(/ on\w+='[^']*'/gi, "")
+    .replace(/javascript:/gi, "");
 };
 
 export default function EmailsPage() {
@@ -187,6 +200,12 @@ export default function EmailsPage() {
     onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
   });
 
+  const openNew = () => {
+    setEditing(null);
+    setForm({ ...EMPTY });
+    setOpen(true);
+  };
+
   const openEdit = (t: Template) => {
     setEditing(t.id);
     setForm({
@@ -213,7 +232,7 @@ export default function EmailsPage() {
       </div>
     ) },
     { key: "active", header: "Estado", sortable: true, value: (t) => (t.active ? "Activa" : "Inactiva"), cell: (t) => (
-      <Badge variant={t.active ? "default" : "secondary"}>{t.active ? "Activa" : "Inactiva"}</Badge>
+      <StatusBadge label={t.active ? "Activa" : "Inactiva"} tone={t.active ? "success" : "muted"} />
     ) },
     { key: "updated_at", header: "Actualizada", sortable: true, defaultHidden: true, value: (t) => t.updated_at, cell: (t) => (
       <span className="text-xs">{new Date(t.updated_at).toLocaleDateString("es-CL")}</span>
@@ -229,7 +248,9 @@ export default function EmailsPage() {
     ) },
     { key: "recipient_email", header: "Destinatario", sortable: true, value: (l) => l.recipient_email, cell: (l) => l.recipient_email },
     { key: "subject", header: "Asunto", value: (l) => l.subject, cell: (l) => <span className="text-sm">{l.subject}</span> },
-    { key: "status", header: "Estado", sortable: true, value: (l) => l.status, cell: (l) => statusBadge(l.status) },
+    { key: "status", header: "Estado", sortable: true, value: (l) => l.status, cell: (l) => (
+      <StatusBadge label={logLabels[l.status] ?? l.status} tone={logStatusTone(l.status)} />
+    ) },
     { key: "attempts", header: "Intentos", sortable: true, defaultHidden: true, value: (l) => l.attempts, cell: (l) => l.attempts },
     { key: "error_message", header: "Error", defaultHidden: true, value: (l) => l.error_message ?? "", cell: (l) => (
       <span className="text-xs text-destructive">{l.error_message ?? "—"}</span>
@@ -241,15 +262,29 @@ export default function EmailsPage() {
     [logsQ.data, logStatus]
   );
 
-  const logStats = useMemo(() => {
-    const l = logsQ.data ?? [];
-    return {
-      total: l.length,
-      sent: l.filter((x) => x.status === "sent").length,
-      pending: l.filter((x) => x.status === "pending").length,
-      errors: l.filter((x) => ["error", "failed"].includes(x.status)).length,
-    };
-  }, [logsQ.data]);
+  const templates = templatesQ.data ?? [];
+  const logs = logsQ.data ?? [];
+
+  const kpis = [
+    { label: "Plantillas", value: templates.length, icon: <FileText className="h-4 w-4" /> },
+    { label: "Activas", value: templates.filter((t) => t.active).length, icon: <CheckCircle2 className="h-4 w-4" />, accent: "text-emerald-600" },
+    { label: "Enviados", value: logs.filter((l) => l.status === "sent").length, icon: <Send className="h-4 w-4" />, accent: "text-blue-600" },
+    { label: "Errores", value: logs.filter((l) => ["error", "failed"].includes(l.status)).length, icon: <XCircle className="h-4 w-4" />, accent: "text-red-600" },
+  ];
+
+  const rowActions = (t: Template) => (
+    <RowActions
+      actions={[
+        { label: "Editar", icon: <Edit className="h-4 w-4" />, inline: true, onClick: () => openEdit(t) },
+        { label: "Duplicar", icon: <Copy className="h-4 w-4" />, onClick: () => duplicate.mutate(t) },
+        t.active
+          ? { label: "Desactivar", icon: <XCircle className="h-4 w-4" />, onClick: () => toggleActive.mutate({ ids: [t.id], active: false }) }
+          : { label: "Activar", icon: <CheckCircle2 className="h-4 w-4" />, onClick: () => toggleActive.mutate({ ids: [t.id], active: true }) },
+        { label: "Enviar prueba", icon: <Send className="h-4 w-4" />, inline: true, onClick: () => setTestOpen(t) },
+        { label: "Eliminar", icon: <Trash2 className="h-4 w-4" />, destructive: true, onClick: () => setToDelete(t) },
+      ]}
+    />
+  );
 
   return (
     <div>
@@ -258,11 +293,13 @@ export default function EmailsPage() {
         description="Plantillas, envíos de prueba e historial de correos"
         icon={<Mail className="h-5 w-5" />}
         actions={
-          <Button className="rounded-2xl" onClick={() => { setEditing(null); setForm({ ...EMPTY }); setOpen(true); }}>
+          <Button className="rounded-2xl" onClick={openNew}>
             <Plus className="h-4 w-4 mr-2" /> Nueva plantilla
           </Button>
         }
       />
+
+      <KpiGrid items={kpis} loading={templatesQ.isLoading || logsQ.isLoading} />
 
       <Tabs defaultValue="templates" className="space-y-4">
         <TabsList className="rounded-2xl">
@@ -282,30 +319,17 @@ export default function EmailsPage() {
             exportFileName="plantillas-correo"
             emptyTitle="Sin plantillas"
             emptyDescription="Crea tu primera plantilla de correo para empezar."
+            onRowClick={openEdit}
             bulkActions={[
               { label: "Activar", onClick: (rows) => toggleActive.mutate({ ids: rows.map((r) => r.id), active: true }) },
               { label: "Desactivar", onClick: (rows) => toggleActive.mutate({ ids: rows.map((r) => r.id), active: false }) },
               { label: "Eliminar", destructive: true, icon: <Trash2 className="h-4 w-4" />, onClick: (rows) => remove.mutate(rows.map((r) => r.id)) },
             ]}
-            rowActions={(t) => (
-              <>
-                <Button size="sm" variant="outline" onClick={() => openEdit(t)}><Edit className="h-4 w-4" /></Button>
-                <Button size="sm" variant="outline" onClick={() => duplicate.mutate(t)}><Copy className="h-4 w-4" /></Button>
-                <Button size="sm" variant="outline" onClick={() => setTestOpen(t)}><Send className="h-4 w-4" /></Button>
-                <Button size="sm" variant="destructive" onClick={() => setToDelete(t)}><Trash2 className="h-4 w-4" /></Button>
-              </>
-            )}
+            rowActions={rowActions}
           />
         </TabsContent>
 
         <TabsContent value="logs" className="space-y-4">
-          <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Total registros" value={logStats.total} loading={logsQ.isLoading} />
-            <StatCard label="Enviados" value={logStats.sent} accent="text-emerald-600" loading={logsQ.isLoading} />
-            <StatCard label="Pendientes" value={logStats.pending} accent="text-amber-600" loading={logsQ.isLoading} />
-            <StatCard label="Errores" value={logStats.errors} accent="text-red-600" loading={logsQ.isLoading} />
-          </div>
-
           <DataTable
             data={filteredLogs}
             isLoading={logsQ.isLoading}
@@ -337,54 +361,87 @@ export default function EmailsPage() {
       </Tabs>
 
       {/* Editor */}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editing ? "Editar plantilla" : "Nueva plantilla"}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Clave (key)</Label>
-              <Input value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="compra-aprobada" />
-            </div>
-            <div className="space-y-2">
-              <Label>Nombre</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Descripción</Label>
-              <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Asunto</Label>
-              <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Variables disponibles (separadas por comas)</Label>
-              <Input value={form.variables} onChange={(e) => setForm({ ...form, variables: e.target.value })} placeholder="nombre, curso, monto" />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <Label>Contenido HTML</Label>
-              <Textarea
-                rows={12}
-                className="font-mono text-xs"
-                value={form.html_content}
-                onChange={(e) => setForm({ ...form, html_content: e.target.value })}
-              />
-            </div>
-            <div className="md:col-span-2 flex items-center gap-3">
-              <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
-              <Label>Plantilla activa</Label>
-            </div>
+      <EditSheet
+        open={open}
+        onOpenChange={setOpen}
+        title={editing ? "Editar plantilla" : "Nueva plantilla"}
+        description="Guarda con Ctrl + S o cierra con Esc."
+        onSubmit={() => upsert.mutate()}
+        saving={upsert.isPending}
+        submitLabel={editing ? "Guardar cambios" : "Crear plantilla"}
+        width="xl"
+        aside={
+          <Tabs defaultValue="preview" className="w-full">
+            <TabsList className="rounded-2xl mb-3">
+              <TabsTrigger value="preview"><Eye className="h-3.5 w-3.5 mr-1.5" />Vista previa</TabsTrigger>
+              <TabsTrigger value="visual"><Wand2 className="h-3.5 w-3.5 mr-1.5" />Editor visual</TabsTrigger>
+            </TabsList>
+            <TabsContent value="preview" className="space-y-3 mt-0">
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Asunto</p>
+                <p className="font-medium text-sm">{form.subject || "Sin asunto"}</p>
+              </div>
+              <div className="rounded-xl border bg-background p-3 max-h-64 overflow-auto">
+                {form.html_content ? (
+                  <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.html_content) }} />
+                ) : (
+                  <p className="text-xs text-muted-foreground">Sin contenido HTML todavía.</p>
+                )}
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Variables</p>
+                <div className="flex flex-wrap gap-1">
+                  {form.variables.split(",").map((v) => v.trim()).filter(Boolean).map((v) => (
+                    <Badge key={v} variant="outline" className="text-[10px] font-mono">{`{{${v}}}`}</Badge>
+                  ))}
+                  {!form.variables.trim() && <span className="text-xs text-muted-foreground">Sin variables definidas</span>}
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="visual" className="mt-0">
+              <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                Editor visual (próximamente) — por ahora edita el HTML directamente en el formulario.
+              </div>
+            </TabsContent>
+          </Tabs>
+        }
+      >
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Clave (key)</Label>
+            <Input value={form.key} onChange={(e) => setForm({ ...form, key: e.target.value })} placeholder="compra-aprobada" />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button onClick={() => upsert.mutate()} disabled={upsert.isPending || !form.key || !form.name || !form.subject}>
-              {upsert.isPending ? "Guardando…" : "Guardar"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="space-y-2">
+            <Label>Nombre</Label>
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Descripción</Label>
+            <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Asunto</Label>
+            <Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} />
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Variables disponibles (separadas por comas)</Label>
+            <Input value={form.variables} onChange={(e) => setForm({ ...form, variables: e.target.value })} placeholder="nombre, curso, monto" />
+          </div>
+          <div className="md:col-span-2 space-y-2">
+            <Label>Contenido HTML</Label>
+            <Textarea
+              rows={12}
+              className="font-mono text-xs"
+              value={form.html_content}
+              onChange={(e) => setForm({ ...form, html_content: e.target.value })}
+            />
+          </div>
+          <div className="md:col-span-2 flex items-center gap-3">
+            <Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
+            <Label>Plantilla activa</Label>
+          </div>
+        </div>
+      </EditSheet>
 
       {/* Envío de prueba */}
       <Dialog open={!!testOpen} onOpenChange={(v) => !v && setTestOpen(null)}>
