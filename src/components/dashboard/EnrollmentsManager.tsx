@@ -4,11 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, BookOpen, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
+import { Users, BookOpen, CheckCircle2, XCircle, RotateCcw, GraduationCap, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { DataTable, DataTableColumn } from "@/components/dashboard/shared/DataTable";
-import { StatCard } from "@/components/dashboard/shared/StatCard";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
+import { RowActions } from "@/components/dashboard/shared/RowActions";
+import { StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 
 interface EnrollmentRow {
   id: string;
@@ -20,17 +25,42 @@ interface EnrollmentRow {
   source: string;
   email: string;
   full_name: string | null;
+  avatar_url: string | null;
   course_title: string;
 }
 
-const statusBadge = (status: string) => {
-  const map: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
-    active: { label: "Activo", variant: "default" },
-    completed: { label: "Completado", variant: "secondary" },
-    cancelled: { label: "Cancelado", variant: "outline" },
-  };
-  const m = map[status] ?? { label: status, variant: "outline" as const };
-  return <Badge variant={m.variant}>{m.label}</Badge>;
+interface PurchaseRow {
+  id: string;
+  amount: number;
+  currency: string;
+  payment_status: string;
+  created_at: string;
+  course_id: string;
+}
+
+const statusTone = (status: string): "success" | "info" | "danger" | "neutral" => {
+  if (status === "active") return "success";
+  if (status === "completed") return "info";
+  if (status === "cancelled") return "danger";
+  return "neutral";
+};
+
+const statusLabels: Record<string, string> = {
+  active: "Activa",
+  completed: "Completada",
+  cancelled: "Cancelada",
+  pending: "Pendiente",
+};
+
+const initials = (name: string | null, email: string) => {
+  const source = name || email || "?";
+  return source
+    .split(" ")
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
 };
 
 export const EnrollmentsManager = () => {
@@ -38,6 +68,7 @@ export const EnrollmentsManager = () => {
   const qc = useQueryClient();
   const [status, setStatus] = useState("all");
   const [course, setCourse] = useState("all");
+  const [inspecting, setInspecting] = useState<EnrollmentRow | null>(null);
 
   const { data: enrollments, isLoading, error } = useQuery({
     queryKey: ["admin-enrollments"],
@@ -52,7 +83,7 @@ export const EnrollmentsManager = () => {
       const userIds = [...new Set(rows.map((r) => r.user_id))];
       const courseIds = [...new Set(rows.map((r) => r.course_id))];
       const [{ data: profiles }, { data: courses }] = await Promise.all([
-        supabase.from("profiles").select("id, email, full_name").in("id", userIds),
+        supabase.from("profiles").select("id, email, full_name, avatar_url").in("id", userIds),
         supabase.from("courses").select("id, title").in("id", courseIds),
       ]);
       const pMap = new Map((profiles ?? []).map((p) => [p.id, p]));
@@ -62,6 +93,7 @@ export const EnrollmentsManager = () => {
         ...r,
         email: pMap.get(r.user_id)?.email ?? "—",
         full_name: pMap.get(r.user_id)?.full_name ?? null,
+        avatar_url: pMap.get(r.user_id)?.avatar_url ?? null,
         course_title: cMap.get(r.course_id)?.title ?? "—",
       })) as EnrollmentRow[];
     },
@@ -72,6 +104,37 @@ export const EnrollmentsManager = () => {
     queryFn: async () => {
       const { data } = await supabase.from("courses").select("id, title").order("title");
       return data ?? [];
+    },
+  });
+
+  const { data: studentHistory } = useQuery({
+    queryKey: ["admin-enrollments-student", inspecting?.user_id],
+    enabled: !!inspecting,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("enrollments")
+        .select("id, course_id, status, enrolled_at, completed_at")
+        .eq("user_id", inspecting!.user_id)
+        .order("enrolled_at", { ascending: false });
+      if (error) throw error;
+      const courseIds = [...new Set((data ?? []).map((r) => r.course_id))];
+      const { data: courses } = await supabase.from("courses").select("id, title").in("id", courseIds);
+      const cMap = new Map((courses ?? []).map((c) => [c.id, c.title]));
+      return (data ?? []).map((r) => ({ ...r, course_title: cMap.get(r.course_id) ?? "—" }));
+    },
+  });
+
+  const { data: studentPurchases } = useQuery({
+    queryKey: ["admin-purchases-student", inspecting?.user_id],
+    enabled: !!inspecting,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("purchases")
+        .select("id, amount, currency, payment_status, created_at, course_id")
+        .eq("user_id", inspecting!.user_id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PurchaseRow[];
     },
   });
 
@@ -122,6 +185,7 @@ export const EnrollmentsManager = () => {
       total: list.length,
       active: list.filter((e) => e.status === "active").length,
       completed: list.filter((e) => e.status === "completed").length,
+      pending: list.filter((e) => e.status === "pending").length,
       cancelled: list.filter((e) => e.status === "cancelled").length,
     };
   }, [enrollments]);
@@ -139,6 +203,34 @@ export const EnrollmentsManager = () => {
     return [...map.entries()].map(([id, s]) => ({ id, ...s }));
   }, [enrollments, allCourses]);
 
+  const kpis = [
+    { label: "Activas", value: stats.active, icon: <Users className="h-4 w-4" />, accent: "text-emerald-600" },
+    { label: "Completadas", value: stats.completed, icon: <CheckCircle2 className="h-4 w-4" />, accent: "text-blue-600" },
+    { label: "Pendientes", value: stats.pending, icon: <Clock className="h-4 w-4" />, accent: "text-amber-600" },
+    { label: "Canceladas", value: stats.cancelled, icon: <XCircle className="h-4 w-4" />, accent: "text-red-600" },
+  ];
+
+  const progressFor = (e: EnrollmentRow) => (e.status === "completed" ? 100 : 0);
+
+  const rowActions = (e: EnrollmentRow) => (
+    <RowActions
+      actions={[
+        e.status !== "completed"
+          ? { label: "Completar", icon: <CheckCircle2 className="h-4 w-4" />, inline: true, onClick: () => updateStatus.mutate({ ids: [e.id], newStatus: "completed" }) }
+          : { label: "Reactivar", icon: <RotateCcw className="h-4 w-4" />, inline: true, onClick: () => updateStatus.mutate({ ids: [e.id], newStatus: "active" }) },
+        { label: "Reactivar", icon: <RotateCcw className="h-4 w-4" />, hidden: e.status === "completed", onClick: () => updateStatus.mutate({ ids: [e.id], newStatus: "active" }) },
+        { label: "Cancelar", icon: <XCircle className="h-4 w-4" />, destructive: true, hidden: e.status === "cancelled", onClick: () => updateStatus.mutate({ ids: [e.id], newStatus: "cancelled" }) },
+      ]}
+    />
+  );
+
+  const renderAvatar = (e: EnrollmentRow) => (
+    <Avatar className="h-9 w-9">
+      <AvatarImage src={e.avatar_url ?? undefined} alt={e.full_name ?? e.email} />
+      <AvatarFallback className="text-xs">{initials(e.full_name, e.email)}</AvatarFallback>
+    </Avatar>
+  );
+
   const columns: DataTableColumn<EnrollmentRow>[] = [
     {
       key: "student",
@@ -146,34 +238,53 @@ export const EnrollmentsManager = () => {
       sortable: true,
       value: (e) => e.full_name || e.email,
       cell: (e) => (
-        <div className="min-w-0">
-          <p className="font-medium truncate">{e.full_name || "Sin nombre"}</p>
-          <p className="text-xs text-muted-foreground truncate">{e.email}</p>
+        <div className="flex items-center gap-3 min-w-[220px]">
+          {renderAvatar(e)}
+          <div className="min-w-0">
+            <p className="font-medium truncate">{e.full_name || "Sin nombre"}</p>
+            <p className="text-xs text-muted-foreground truncate">{e.email}</p>
+          </div>
         </div>
       ),
     },
     { key: "course_title", header: "Curso", sortable: true, value: (e) => e.course_title, cell: (e) => <span className="truncate block max-w-[220px]">{e.course_title}</span> },
-    { key: "status", header: "Estado", sortable: true, value: (e) => e.status, cell: (e) => statusBadge(e.status) },
-    { key: "source", header: "Origen", sortable: true, defaultHidden: true, value: (e) => e.source, cell: (e) => <Badge variant="outline">{e.source}</Badge> },
     {
       key: "enrolled_at",
-      header: "Inscrito",
+      header: "Fecha inscripción",
       sortable: true,
       value: (e) => e.enrolled_at,
       cell: (e) => <span className="text-xs whitespace-nowrap">{new Date(e.enrolled_at).toLocaleDateString("es-CL")}</span>,
     },
     {
-      key: "completed_at",
-      header: "Completado",
+      key: "last_activity",
+      header: "Última actividad",
       sortable: true,
-      defaultHidden: true,
-      value: (e) => e.completed_at ?? "",
+      value: (e) => e.completed_at ?? e.enrolled_at,
       cell: (e) => (
         <span className="text-xs whitespace-nowrap">
-          {e.completed_at ? new Date(e.completed_at).toLocaleDateString("es-CL") : "—"}
+          {new Date(e.completed_at ?? e.enrolled_at).toLocaleDateString("es-CL")}
         </span>
       ),
     },
+    {
+      key: "status",
+      header: "Estado",
+      sortable: true,
+      value: (e) => statusLabels[e.status] || e.status,
+      cell: (e) => <StatusBadge label={statusLabels[e.status] || e.status} tone={statusTone(e.status)} />,
+    },
+    {
+      key: "progress",
+      header: "Progreso",
+      value: (e) => progressFor(e),
+      cell: (e) => (
+        <div className="w-28 space-y-1">
+          <Progress value={progressFor(e)} className="h-1.5" />
+          <span className="text-[10px] text-muted-foreground">{progressFor(e)}%</span>
+        </div>
+      ),
+    },
+    { key: "source", header: "Origen", sortable: true, defaultHidden: true, value: (e) => e.source, cell: (e) => <Badge variant="outline">{e.source}</Badge> },
   ];
 
   return (
@@ -184,12 +295,7 @@ export const EnrollmentsManager = () => {
       </TabsList>
 
       <TabsContent value="enrollments" className="space-y-4">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Total" value={stats.total} loading={isLoading} />
-          <StatCard label="Activas" value={stats.active} accent="text-emerald-600" loading={isLoading} />
-          <StatCard label="Completadas" value={stats.completed} accent="text-serene-primary" loading={isLoading} />
-          <StatCard label="Canceladas" value={stats.cancelled} accent="text-red-600" loading={isLoading} />
-        </div>
+        <KpiGrid items={kpis} loading={isLoading} />
 
         <DataTable
           data={filtered}
@@ -202,6 +308,35 @@ export const EnrollmentsManager = () => {
           exportFileName="inscripciones"
           emptyTitle="Sin inscripciones"
           emptyDescription="Aquí aparecerán los alumnos inscritos en los cursos."
+          views={["table", "cards", "list"]}
+          onRowClick={(row) => setInspecting(row)}
+          renderCard={(e) => (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                {renderAvatar(e)}
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{e.full_name || "Sin nombre"}</p>
+                  <p className="text-xs text-muted-foreground truncate">{e.email}</p>
+                </div>
+              </div>
+              <p className="text-sm truncate">{e.course_title}</p>
+              <div className="flex items-center justify-between">
+                <StatusBadge label={statusLabels[e.status] || e.status} tone={statusTone(e.status)} />
+                <span className="text-[11px] text-muted-foreground">{new Date(e.enrolled_at).toLocaleDateString("es-CL")}</span>
+              </div>
+              <Progress value={progressFor(e)} className="h-1.5" />
+            </div>
+          )}
+          renderListItem={(e) => (
+            <div className="flex items-center gap-3">
+              {renderAvatar(e)}
+              <div className="min-w-0">
+                <p className="truncate font-medium">{e.full_name || e.email}</p>
+                <p className="truncate text-xs text-muted-foreground">{e.course_title}</p>
+              </div>
+              <div className="ml-auto"><StatusBadge label={statusLabels[e.status] || e.status} tone={statusTone(e.status)} /></div>
+            </div>
+          )}
           filters={[
             {
               key: "status",
@@ -212,6 +347,7 @@ export const EnrollmentsManager = () => {
                 { value: "all", label: "Todos los estados" },
                 { value: "active", label: "Activas" },
                 { value: "completed", label: "Completadas" },
+                { value: "pending", label: "Pendientes" },
                 { value: "cancelled", label: "Canceladas" },
               ],
             },
@@ -231,24 +367,7 @@ export const EnrollmentsManager = () => {
             { label: "Reactivar", icon: <RotateCcw className="h-4 w-4" />, onClick: (rows) => updateStatus.mutate({ ids: rows.map((r) => r.id), newStatus: "active" }) },
             { label: "Cancelar", destructive: true, icon: <XCircle className="h-4 w-4" />, onClick: (rows) => updateStatus.mutate({ ids: rows.map((r) => r.id), newStatus: "cancelled" }) },
           ]}
-          rowActions={(e) => (
-            <>
-              {e.status === "active" ? (
-                <>
-                  <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ ids: [e.id], newStatus: "completed" })}>
-                    Completar
-                  </Button>
-                  <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate({ ids: [e.id], newStatus: "cancelled" })}>
-                    Cancelar
-                  </Button>
-                </>
-              ) : (
-                <Button size="sm" variant="outline" onClick={() => updateStatus.mutate({ ids: [e.id], newStatus: "active" })}>
-                  Reactivar
-                </Button>
-              )}
-            </>
-          )}
+          rowActions={rowActions}
         />
       </TabsContent>
 
@@ -277,6 +396,73 @@ export const EnrollmentsManager = () => {
           ))}
         </div>
       </TabsContent>
+
+      <Sheet open={!!inspecting} onOpenChange={(o) => !o && setInspecting(null)}>
+        <SheetContent side="right" className="sm:max-w-lg w-full p-0 flex flex-col gap-0">
+          {inspecting && (
+            <>
+              <SheetHeader className="px-6 py-4 border-b space-y-1">
+                <SheetTitle>Detalle de inscripción</SheetTitle>
+                <SheetDescription>Información de solo lectura del alumno.</SheetDescription>
+              </SheetHeader>
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-14 w-14">
+                    <AvatarImage src={inspecting.avatar_url ?? undefined} />
+                    <AvatarFallback>{initials(inspecting.full_name, inspecting.email)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="font-semibold truncate">{inspecting.full_name || "Sin nombre"}</p>
+                    <p className="text-sm text-muted-foreground truncate">{inspecting.email}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Curso actual</p>
+                  <div className="rounded-2xl border p-3 flex items-center justify-between">
+                    <span className="text-sm font-medium">{inspecting.course_title}</span>
+                    <StatusBadge label={statusLabels[inspecting.status] || inspecting.status} tone={statusTone(inspecting.status)} />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                    <GraduationCap className="h-3.5 w-3.5" /> Historial de inscripciones
+                  </p>
+                  <div className="space-y-2">
+                    {(studentHistory ?? []).map((h) => (
+                      <div key={h.id} className="rounded-2xl border p-3 flex items-center justify-between text-sm">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{h.course_title}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(h.enrolled_at).toLocaleDateString("es-CL")}</p>
+                        </div>
+                        <StatusBadge label={statusLabels[h.status] || h.status} tone={statusTone(h.status)} />
+                      </div>
+                    ))}
+                    {!studentHistory?.length && <p className="text-xs text-muted-foreground">Sin historial adicional.</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Compras relacionadas</p>
+                  <div className="space-y-2">
+                    {(studentPurchases ?? []).map((p) => (
+                      <div key={p.id} className="rounded-2xl border p-3 flex items-center justify-between text-sm">
+                        <div>
+                          <p className="font-medium">{p.currency} {p.amount.toLocaleString("es-CL")}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(p.created_at).toLocaleDateString("es-CL")}</p>
+                        </div>
+                        <Badge variant="outline">{p.payment_status}</Badge>
+                      </div>
+                    ))}
+                    {!studentPurchases?.length && <p className="text-xs text-muted-foreground">Sin compras registradas.</p>}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </Tabs>
   );
 };

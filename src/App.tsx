@@ -18,6 +18,8 @@ import { Chatbot } from "./components/Chatbot";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import CoursesPage from "./pages/dashboard/CoursesPage";
+import CourseBuilderPage from "./pages/dashboard/CourseBuilderPage";
+
 import EnrollmentsPage from "./pages/dashboard/EnrollmentsPage";
 import ProjectsPage from "./pages/dashboard/ProjectsPage";
 import NewsPage from "./pages/dashboard/NewsPage";
@@ -42,6 +44,8 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="courses" element={<CoursesPage />} />
+            <Route path="courses/:id/builder" element={<CourseBuilderPage />} />
+
             <Route path="enrollments" element={<EnrollmentsPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="news" element={<NewsPage />} />

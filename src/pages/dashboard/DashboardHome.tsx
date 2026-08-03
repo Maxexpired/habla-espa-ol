@@ -1,48 +1,203 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   BookOpen,
   Users,
   Wallet,
-  Newspaper,
-  FolderKanban,
-  UserCog,
-  HelpCircle,
-  Plus,
   ArrowUpRight,
   LayoutDashboard,
+  SlidersHorizontal,
+  CalendarClock,
+  Trophy,
 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/shared/PageHeader";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
 import { LoadingState } from "@/components/dashboard/shared/LoadingState";
+import { StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 import { RecentActivity, SystemStatus } from "@/components/dashboard/SystemOverview";
+import {
+  WidgetCard,
+  RecentPurchasesWidget,
+  RecentCoursesWidget,
+  RecentNewsWidget,
+  RecentProjectsWidget,
+  NewUsersWidget,
+  EmailsWidget,
+  StorageWidget,
+  QuickActionsWidget,
+} from "@/components/dashboard/widgets/HomeWidgets";
 
+const currency = (n: number) =>
+  new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n || 0);
 
-const currency = (n: number) => new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n);
+/* ---------------------------- extra widgets ---------------------------- */
+
+const UpcomingPublicationsWidget = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["widget-upcoming-news"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("news")
+        .select("id, title, scheduled_at")
+        .eq("published", false)
+        .not("scheduled_at", "is", null)
+        .gte("scheduled_at", new Date().toISOString())
+        .order("scheduled_at", { ascending: true })
+        .limit(5);
+      return data ?? [];
+    },
+  });
+
+  return (
+    <WidgetCard title="Próximas publicaciones" icon={<CalendarClock className="h-4 w-4" />} to="/dashboard/news">
+      {isLoading ? (
+        <LoadingState rows={2} />
+      ) : !data?.length ? (
+        <p className="text-sm text-muted-foreground">No hay contenido programado.</p>
+      ) : (
+        <ul className="divide-y">
+          {data.map((n) => (
+            <li key={n.id} className="flex items-center justify-between gap-3 py-2.5">
+              <p className="truncate text-sm font-medium">{n.title}</p>
+              <StatusBadge
+                label={new Date(n.scheduled_at as string).toLocaleDateString("es-CL")}
+                tone="info"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </WidgetCard>
+  );
+};
+
+const TopCoursesWidget = () => {
+  const { data, isLoading } = useQuery({
+    queryKey: ["widget-top-courses"],
+    staleTime: 60_000,
+    queryFn: async () => {
+      const [{ data: purchases }, { data: courses }] = await Promise.all([
+        supabase.from("purchases").select("course_id, amount, discount_amount").eq("payment_status", "approved"),
+        supabase.from("courses").select("id, title"),
+      ]);
+      const map = new Map((courses ?? []).map((c) => [c.id, c.title]));
+      const agg = new Map<string, { sales: number; revenue: number }>();
+      for (const p of purchases ?? []) {
+        const cur = agg.get(p.course_id) ?? { sales: 0, revenue: 0 };
+        cur.sales += 1;
+        cur.revenue += Number(p.amount || 0) - Number(p.discount_amount || 0);
+        agg.set(p.course_id, cur);
+      }
+      return [...agg.entries()]
+        .map(([id, v]) => ({ id, title: map.get(id) ?? "Curso", ...v }))
+        .sort((a, b) => b.sales - a.sales)
+        .slice(0, 5);
+    },
+  });
+
+  return (
+    <WidgetCard title="Cursos más vendidos" icon={<Trophy className="h-4 w-4" />} to="/dashboard/finance">
+      {isLoading ? (
+        <LoadingState rows={3} />
+      ) : !data?.length ? (
+        <p className="text-sm text-muted-foreground">Aún no hay ventas aprobadas.</p>
+      ) : (
+        <ul className="divide-y">
+          {data.map((c, i) => (
+            <li key={c.id} className="flex items-center gap-3 py-2.5">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted text-xs font-semibold">
+                {i + 1}
+              </span>
+              <p className="min-w-0 flex-1 truncate text-sm font-medium">{c.title}</p>
+              <div className="text-right">
+                <p className="text-sm font-semibold">{currency(c.revenue)}</p>
+                <p className="text-[11px] text-muted-foreground">{c.sales} ventas</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </WidgetCard>
+  );
+};
+
+/* ----------------------------- home page ------------------------------ */
+
+const WIDGETS = [
+  { key: "purchases", label: "Últimas compras", node: <RecentPurchasesWidget />, span: 1 },
+  { key: "topCourses", label: "Cursos más vendidos", node: <TopCoursesWidget />, span: 1 },
+  { key: "quick", label: "Accesos rápidos", node: <QuickActionsWidget />, span: 1 },
+  { key: "courses", label: "Cursos recientes", node: <RecentCoursesWidget />, span: 1 },
+  { key: "news", label: "Noticias recientes", node: <RecentNewsWidget />, span: 1 },
+  { key: "upcoming", label: "Próximas publicaciones", node: <UpcomingPublicationsWidget />, span: 1 },
+  { key: "projects", label: "Proyectos recientes", node: <RecentProjectsWidget />, span: 1 },
+  { key: "users", label: "Usuarios nuevos", node: <NewUsersWidget />, span: 1 },
+  { key: "emails", label: "Correos", node: <EmailsWidget />, span: 1 },
+  { key: "storage", label: "Storage", node: <StorageWidget />, span: 1 },
+  { key: "activity", label: "Actividad reciente", node: <RecentActivity />, span: 1 },
+  { key: "system", label: "Estado del sistema", node: <SystemStatus />, span: 1 },
+] as const;
+
+const STORAGE_KEY = "serene:dashboard:widgets";
 
 export default function DashboardHome() {
+  const [hidden, setHidden] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const toggle = (key: string) =>
+    setHidden((prev) => {
+      const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+
   const { data: stats, isLoading } = useQuery({
     queryKey: ["dashboard-home-stats"],
     queryFn: async () => {
       const now = new Date();
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-      const [courses, publishedCourses, enrollments, activeEnrollments, purchasesMonth, purchasesAll, news, projects] = await Promise.all([
-        supabase.from("courses").select("id", { count: "exact", head: true }),
-        supabase.from("courses").select("id", { count: "exact", head: true }).eq("published", true),
-        supabase.from("enrollments").select("id", { count: "exact", head: true }),
-        supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("status", "active"),
-        supabase.from("purchases").select("amount, discount_amount, payment_status, created_at").gte("created_at", monthStart),
-        supabase.from("purchases").select("id", { count: "exact", head: true }).eq("payment_status", "approved"),
-        supabase.from("news").select("id", { count: "exact", head: true }),
-        supabase.from("projects").select("id", { count: "exact", head: true }),
-      ]);
+      const [courses, publishedCourses, enrollments, activeEnrollments, purchasesMonth, purchasesAll] =
+        await Promise.all([
+          supabase.from("courses").select("id", { count: "exact", head: true }),
+          supabase.from("courses").select("id", { count: "exact", head: true }).eq("published", true),
+          supabase.from("enrollments").select("id", { count: "exact", head: true }),
+          supabase.from("enrollments").select("id", { count: "exact", head: true }).eq("status", "active"),
+          supabase
+            .from("purchases")
+            .select("amount, discount_amount, payment_status, created_at")
+            .gte("created_at", monthStart),
+          supabase.from("purchases").select("id", { count: "exact", head: true }).eq("payment_status", "approved"),
+        ]);
 
       const monthApproved = (purchasesMonth.data || []).filter((p) => p.payment_status === "approved");
-      const monthRevenue = monthApproved.reduce((s, p) => s + Number(p.amount || 0) - Number(p.discount_amount || 0), 0);
+      const monthRevenue = monthApproved.reduce(
+        (s, p) => s + Number(p.amount || 0) - Number(p.discount_amount || 0),
+        0
+      );
 
       return {
         courses: courses.count || 0,
@@ -52,191 +207,94 @@ export default function DashboardHome() {
         monthRevenue,
         monthApprovedCount: monthApproved.length,
         totalApprovedCount: purchasesAll.count || 0,
-        news: news.count || 0,
-        projects: projects.count || 0,
       };
     },
   });
 
-  const { data: recentEnrollments } = useQuery({
-    queryKey: ["dashboard-recent-enrollments"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("enrollments")
-        .select("id, user_id, course_id, status, enrolled_at")
-        .order("enrolled_at", { ascending: false })
-        .limit(5);
-      if (!data?.length) return [];
-      const userIds = [...new Set(data.map((d) => d.user_id))];
-      const courseIds = [...new Set(data.map((d) => d.course_id))];
-      const [{ data: profiles }, { data: courses }] = await Promise.all([
-        supabase.from("profiles").select("id, email, full_name").in("id", userIds),
-        supabase.from("courses").select("id, title").in("id", courseIds),
-      ]);
-      const pMap = new Map((profiles || []).map((p) => [p.id, p]));
-      const cMap = new Map((courses || []).map((c) => [c.id, c]));
-      return data.map((d) => ({
-        ...d,
-        user: pMap.get(d.user_id),
-        course: cMap.get(d.course_id),
-      }));
-    },
-  });
-
-  const { data: recentPurchases } = useQuery({
-    queryKey: ["dashboard-recent-purchases"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("purchases")
-        .select("id, user_id, course_id, amount, payment_status, created_at")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      return data || [];
-    },
-  });
-
   const kpis = [
-    { label: "Cursos publicados", value: stats ? `${stats.publishedCourses}/${stats.courses}` : "—", icon: BookOpen, color: "text-serene-primary" },
-    { label: "Inscripciones activas", value: stats ? `${stats.activeEnrollments}` : "—", sub: stats ? `${stats.enrollments} totales` : undefined, icon: Users, color: "text-blue-600" },
-    { label: "Ingresos del mes", value: stats ? currency(stats.monthRevenue) : "—", sub: stats ? `${stats.monthApprovedCount} compras aprobadas` : undefined, icon: Wallet, color: "text-emerald-600" },
-    { label: "Ventas aprobadas totales", value: stats ? `${stats.totalApprovedCount}` : "—", icon: ArrowUpRight, color: "text-purple-600" },
+    {
+      label: "Cursos publicados",
+      value: stats ? `${stats.publishedCourses}/${stats.courses}` : "—",
+      icon: <BookOpen className="h-4 w-4" />,
+      accent: "text-serene-primary",
+    },
+    {
+      label: "Inscripciones activas",
+      value: stats ? stats.activeEnrollments : "—",
+      sub: stats ? `${stats.enrollments} totales` : undefined,
+      icon: <Users className="h-4 w-4" />,
+      accent: "text-blue-600",
+    },
+    {
+      label: "Ingresos del mes",
+      value: stats ? currency(stats.monthRevenue) : "—",
+      sub: stats ? `${stats.monthApprovedCount} compras aprobadas` : undefined,
+      icon: <Wallet className="h-4 w-4" />,
+      accent: "text-emerald-600",
+    },
+    {
+      label: "Ventas aprobadas",
+      value: stats ? stats.totalApprovedCount : "—",
+      icon: <ArrowUpRight className="h-4 w-4" />,
+      accent: "text-purple-600",
+    },
   ];
 
-  const quickActions = [
-    { label: "Nuevo curso", url: "/dashboard/courses", icon: BookOpen },
-    { label: "Nueva noticia", url: "/dashboard/news", icon: Newspaper },
-    { label: "Nuevo proyecto", url: "/dashboard/projects", icon: FolderKanban },
-    { label: "Nuevo miembro", url: "/dashboard/team", icon: UserCog },
-    { label: "Nueva FAQ", url: "/dashboard/faqs", icon: HelpCircle },
-  ];
-
-  const statusBadge = (s: string) => {
-    const map: Record<string, { label: string; cls: string }> = {
-      approved: { label: "Aprobada", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-      pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 border-amber-200" },
-      rejected: { label: "Rechazada", cls: "bg-red-100 text-red-700 border-red-200" },
-      failed: { label: "Fallida", cls: "bg-red-100 text-red-700 border-red-200" },
-      refunded: { label: "Reembolsada", cls: "bg-blue-100 text-blue-700 border-blue-200" },
-    };
-    const m = map[s] || { label: s, cls: "bg-muted text-foreground" };
-    return <Badge variant="outline" className={m.cls}>{m.label}</Badge>;
-  };
+  const visible = WIDGETS.filter((w) => !hidden.includes(w.key));
 
   return (
     <div>
       <PageHeader
         title="Panel de administración"
-        description="Resumen general de la actividad de Serene"
+        description="Centro de control de Serene"
         icon={<LayoutDashboard className="h-5 w-5" />}
+        actions={
+          <>
+            <Button asChild variant="outline" className="rounded-2xl">
+              <Link to="/dashboard/analytics">Ver estadísticas</Link>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="rounded-2xl">
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Widgets
+                  <Badge variant="outline" className="ml-2 rounded-lg text-[10px]">
+                    {visible.length}/{WIDGETS.length}
+                  </Badge>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-2xl">
+                <DropdownMenuLabel>Mostrar widgets</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {WIDGETS.map((w) => (
+                  <DropdownMenuCheckboxItem
+                    key={w.key}
+                    checked={!hidden.includes(w.key)}
+                    onCheckedChange={() => toggle(w.key)}
+                    onSelect={(e) => e.preventDefault()}
+                  >
+                    {w.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        }
       />
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-6">
-        {kpis.map((k) => (
-          <Card key={k.label} className="rounded-3xl">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">{k.label}</p>
-                  <p className="text-2xl font-bold mt-2">{k.value}</p>
-                  {k.sub && <p className="text-xs text-muted-foreground mt-1">{k.sub}</p>}
-                </div>
-                <div className={`rounded-2xl bg-muted p-2 ${k.color}`}>
-                  <k.icon className="h-4 w-4" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <KpiGrid items={kpis} loading={isLoading} />
+
+      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3 animate-fade-in">
+        {visible.map((w) => (
+          <div key={w.key}>{w.node}</div>
         ))}
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-3 mb-6">
-        <Card className="rounded-3xl lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="text-base">Inscripciones recientes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {!recentEnrollments ? (
-              <LoadingState rows={3} />
-            ) : recentEnrollments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Sin inscripciones aún.</p>
-            ) : (
-              <ul className="divide-y">
-                {recentEnrollments.map((e: any) => (
-                  <li key={e.id} className="py-3 flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{e.course?.title ?? "Curso"}</p>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {e.user?.full_name || e.user?.email || "Alumno"} · {new Date(e.enrolled_at).toLocaleDateString("es-CL")}
-                      </p>
-                    </div>
-                    <Badge variant="outline">{e.status}</Badge>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="rounded-3xl">
-          <CardHeader>
-            <CardTitle className="text-base">Accesos rápidos</CardTitle>
-          </CardHeader>
-          <CardContent className="grid gap-2">
-            {quickActions.map((a) => (
-              <Button key={a.url} asChild variant="outline" className="justify-start rounded-2xl">
-                <Link to={a.url}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  <a.icon className="h-4 w-4 mr-2 text-muted-foreground" />
-                  {a.label}
-                </Link>
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="rounded-3xl">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Compras recientes</CardTitle>
-          <Button asChild size="sm" variant="ghost">
-            <Link to="/dashboard/finance">Ver todas</Link>
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {isLoading || !recentPurchases ? (
-            <LoadingState rows={3} />
-          ) : recentPurchases.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Sin compras registradas.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="text-xs uppercase text-muted-foreground">
-                  <tr className="text-left">
-                    <th className="py-2">Fecha</th>
-                    <th>Monto</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentPurchases.map((p: any) => (
-                    <tr key={p.id} className="border-t">
-                      <td className="py-2">{new Date(p.created_at).toLocaleString("es-CL")}</td>
-                      <td>{currency(Number(p.amount || 0))}</td>
-                      <td>{statusBadge(p.payment_status)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 lg:grid-cols-3 mt-6">
-        <RecentActivity />
-        <SystemStatus />
-      </div>
+      {visible.length === 0 && (
+        <p className="rounded-3xl border border-dashed p-10 text-center text-sm text-muted-foreground">
+          Todos los widgets están ocultos. Actívalos desde el menú «Widgets».
+        </p>
+      )}
     </div>
-
   );
 }

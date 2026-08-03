@@ -1,25 +1,32 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/dashboard/shared/PageHeader";
-import { StatCard } from "@/components/dashboard/shared/StatCard";
+import { KpiGrid } from "@/components/dashboard/shared/KpiGrid";
 import { DataTable, DataTableColumn } from "@/components/dashboard/shared/DataTable";
+import { StatusBadge } from "@/components/dashboard/shared/StatusBadge";
 import { Badge } from "@/components/ui/badge";
-import { Wallet } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Wallet, DollarSign, TrendingUp, Receipt, Clock, XCircle, RotateCcw, ExternalLink } from "lucide-react";
 
 const currency = (n: number) =>
   new Intl.NumberFormat("es-CL", { style: "currency", currency: "CLP", maximumFractionDigits: 0 }).format(n || 0);
 
-const statusMap: Record<string, { label: string; cls: string }> = {
-  approved: { label: "Aprobada", cls: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-  pending: { label: "Pendiente", cls: "bg-amber-100 text-amber-700 border-amber-200" },
-  rejected: { label: "Rechazada", cls: "bg-red-100 text-red-700 border-red-200" },
-  failed: { label: "Fallida", cls: "bg-red-100 text-red-700 border-red-200" },
-  refunded: { label: "Reembolsada", cls: "bg-blue-100 text-blue-700 border-blue-200" },
+const statusMap: Record<string, { label: string; tone: "success" | "warning" | "danger" | "info" }> = {
+  approved: { label: "Aprobada", tone: "success" },
+  pending: { label: "Pendiente", tone: "warning" },
+  rejected: { label: "Rechazada", tone: "danger" },
+  failed: { label: "Fallida", tone: "danger" },
+  refunded: { label: "Reembolsada", tone: "info" },
 };
 
 interface PurchaseRow {
   id: string;
+  user_id: string;
+  course_id: string;
   buy_order: string;
   amount: number;
   discount_amount: number;
@@ -34,8 +41,15 @@ interface PurchaseRow {
   full_name: string | null;
 }
 
+type QuickRange = "all" | "today" | "7d" | "30d" | "month";
+
 export default function FinancePage() {
   const [status, setStatus] = useState<string>("all");
+  const [quickRange, setQuickRange] = useState<QuickRange>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [selected, setSelected] = useState<PurchaseRow | null>(null);
+  const navigate = useNavigate();
 
   const { data: purchases, isLoading, error } = useQuery({
     queryKey: ["finance-purchases"],
@@ -68,9 +82,31 @@ export default function FinancePage() {
     },
   });
 
+  const quickFiltered = useMemo(() => {
+    const list = purchases ?? [];
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    let out = list;
+    if (quickRange === "today") out = list.filter((p) => new Date(p.created_at).getTime() >= dayStart);
+    else if (quickRange === "7d") out = list.filter((p) => new Date(p.created_at).getTime() >= dayStart - 6 * 86400000);
+    else if (quickRange === "30d") out = list.filter((p) => new Date(p.created_at).getTime() >= dayStart - 29 * 86400000);
+    else if (quickRange === "month") out = list.filter((p) => new Date(p.created_at).getTime() >= monthStart);
+
+    if (dateFrom) {
+      const from = new Date(dateFrom).getTime();
+      out = out.filter((p) => new Date(p.created_at).getTime() >= from);
+    }
+    if (dateTo) {
+      const to = new Date(dateTo).getTime() + 86400000 - 1;
+      out = out.filter((p) => new Date(p.created_at).getTime() <= to);
+    }
+    return out;
+  }, [purchases, quickRange, dateFrom, dateTo]);
+
   const filtered = useMemo(
-    () => (purchases ?? []).filter((p) => status === "all" || p.payment_status === status),
-    [purchases, status]
+    () => quickFiltered.filter((p) => status === "all" || p.payment_status === status),
+    [quickFiltered, status]
   );
 
   const totals = useMemo(() => {
@@ -92,6 +128,16 @@ export default function FinancePage() {
       refunded: list.filter((p) => p.payment_status === "refunded").length,
     };
   }, [purchases]);
+
+  const kpis = [
+    { label: "Ventas hoy", value: currency(totals.today), icon: <Wallet className="h-4 w-4" /> },
+    { label: "Ventas del mes", value: currency(totals.month), icon: <TrendingUp className="h-4 w-4" /> },
+    { label: "Ingresos totales", value: currency(totals.total), sub: `${totals.count} compras aprobadas`, icon: <DollarSign className="h-4 w-4" />, accent: "text-emerald-600" },
+    { label: "Ticket promedio", value: currency(Math.round(totals.avg)), icon: <Receipt className="h-4 w-4" /> },
+    { label: "Pendientes", value: totals.pending, icon: <Clock className="h-4 w-4" />, accent: "text-amber-600" },
+    { label: "Rechazadas", value: totals.rejected, icon: <XCircle className="h-4 w-4" />, accent: "text-red-600" },
+    { label: "Reembolsadas", value: totals.refunded, icon: <RotateCcw className="h-4 w-4" />, accent: "text-blue-600" },
+  ];
 
   const columns: DataTableColumn<PurchaseRow>[] = [
     {
@@ -124,8 +170,8 @@ export default function FinancePage() {
       sortable: true,
       value: (p) => p.payment_status,
       cell: (p) => {
-        const m = statusMap[p.payment_status] ?? { label: p.payment_status, cls: "" };
-        return <Badge variant="outline" className={m.cls}>{m.label}</Badge>;
+        const m = statusMap[p.payment_status] ?? { label: p.payment_status, tone: "neutral" as const };
+        return <StatusBadge label={m.label} tone={m.tone} />;
       },
     },
     {
@@ -146,6 +192,14 @@ export default function FinancePage() {
     },
   ];
 
+  const quickRanges: { value: QuickRange; label: string }[] = [
+    { value: "today", label: "Hoy" },
+    { value: "7d", label: "7 días" },
+    { value: "30d", label: "30 días" },
+    { value: "month", label: "Este mes" },
+    { value: "all", label: "Todo" },
+  ];
+
   return (
     <div>
       <PageHeader
@@ -154,17 +208,32 @@ export default function FinancePage() {
         icon={<Wallet className="h-5 w-5" />}
       />
 
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-4">
-        <StatCard label="Ventas hoy" value={currency(totals.today)} loading={isLoading} />
-        <StatCard label="Ventas del mes" value={currency(totals.month)} loading={isLoading} />
-        <StatCard label="Ingresos totales" value={currency(totals.total)} sub={`${totals.count} compras aprobadas`} loading={isLoading} />
-        <StatCard label="Ticket promedio" value={currency(Math.round(totals.avg))} loading={isLoading} />
-      </div>
+      <KpiGrid items={kpis} loading={isLoading} columns={4} />
 
-      <div className="grid gap-4 grid-cols-3 mb-6">
-        <StatCard label="Pendientes" value={totals.pending} accent="text-amber-600" loading={isLoading} />
-        <StatCard label="Rechazadas" value={totals.rejected} accent="text-red-600" loading={isLoading} />
-        <StatCard label="Reembolsadas" value={totals.refunded} accent="text-blue-600" loading={isLoading} />
+      <div className="flex flex-wrap items-center gap-3 mb-4 rounded-2xl border bg-background/60 p-3">
+        <div className="flex flex-wrap gap-1.5">
+          {quickRanges.map((r) => (
+            <Button
+              key={r.value}
+              size="sm"
+              variant={quickRange === r.value ? "default" : "outline"}
+              className="rounded-2xl h-8"
+              onClick={() => setQuickRange(r.value)}
+            >
+              {r.label}
+            </Button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <Input type="date" className="h-8 w-[150px] rounded-xl" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          <span className="text-xs text-muted-foreground">a</span>
+          <Input type="date" className="h-8 w-[150px] rounded-xl" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          {(dateFrom || dateTo) && (
+            <Button size="sm" variant="ghost" className="h-8" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+              Limpiar
+            </Button>
+          )}
+        </div>
       </div>
 
       <DataTable
@@ -179,6 +248,7 @@ export default function FinancePage() {
         emptyTitle="Sin compras"
         emptyDescription="No hay compras con los filtros actuales."
         pageSize={25}
+        onRowClick={(row) => setSelected(row)}
         filters={[
           {
             key: "status",
@@ -196,6 +266,65 @@ export default function FinancePage() {
           },
         ]}
       />
+
+      <Sheet open={!!selected} onOpenChange={(v) => !v && setSelected(null)}>
+        <SheetContent side="right" className="sm:max-w-lg w-full p-0 flex flex-col gap-0">
+          <SheetHeader className="px-6 py-4 border-b space-y-1">
+            <SheetTitle>Detalle de compra</SheetTitle>
+            <SheetDescription className="font-mono">{selected?.buy_order}</SheetDescription>
+          </SheetHeader>
+          {selected && (
+            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+              <div className="flex items-center gap-2">
+                {(() => {
+                  const m = statusMap[selected.payment_status] ?? { label: selected.payment_status, tone: "neutral" as const };
+                  return <StatusBadge label={m.label} tone={m.tone} />;
+                })()}
+                {selected.coupon_code && <Badge variant="outline">Cupón: {selected.coupon_code}</Badge>}
+              </div>
+
+              <div className="rounded-2xl border p-4 space-y-2">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Alumno</p>
+                <p className="font-medium">{selected.full_name || "Sin nombre"}</p>
+                <p className="text-sm text-muted-foreground">{selected.email}</p>
+                <Button size="sm" variant="outline" className="rounded-xl mt-1" onClick={() => navigate("/dashboard/enrollments")}>
+                  Ver alumno <ExternalLink className="h-3.5 w-3.5 ml-2" />
+                </Button>
+              </div>
+
+              <div className="rounded-2xl border p-4 space-y-2">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Curso</p>
+                <p className="font-medium">{selected.course_title}</p>
+                <Button size="sm" variant="outline" className="rounded-xl mt-1" onClick={() => navigate("/dashboard/courses")}>
+                  Ver curso <ExternalLink className="h-3.5 w-3.5 ml-2" />
+                </Button>
+              </div>
+
+              <div className="rounded-2xl border p-4 space-y-2 text-sm">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Montos</p>
+                <div className="flex justify-between"><span>Monto</span><span className="font-medium">{currency(Number(selected.amount))}</span></div>
+                <div className="flex justify-between"><span>Descuento</span><span>{currency(Number(selected.discount_amount))}</span></div>
+                <div className="flex justify-between font-semibold border-t pt-2">
+                  <span>Neto</span>
+                  <span>{currency(Number(selected.amount) - Number(selected.discount_amount))}</span>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border p-4 space-y-2 text-sm">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Fechas</p>
+                <div className="flex justify-between"><span>Creada</span><span>{new Date(selected.created_at).toLocaleString("es-CL")}</span></div>
+                <div className="flex justify-between"><span>Aprobada</span><span>{selected.approved_at ? new Date(selected.approved_at).toLocaleString("es-CL") : "—"}</span></div>
+                <div className="flex justify-between"><span>Reembolsada</span><span>{selected.refunded_at ? new Date(selected.refunded_at).toLocaleString("es-CL") : "—"}</span></div>
+              </div>
+
+              <div className="rounded-2xl border p-4 space-y-2 text-sm">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Transbank</p>
+                <div className="flex justify-between"><span>Buy order</span><span className="font-mono text-xs">{selected.buy_order}</span></div>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
