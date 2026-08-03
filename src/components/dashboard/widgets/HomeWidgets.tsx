@@ -112,7 +112,7 @@ export const RecentPurchasesWidget = () => {
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span className="text-sm font-semibold">{currency(Number(p.amount) - Number(p.discount_amount || 0))}</span>
-              <StatusBadge label={p.payment_status} tone={tone(p.payment_status) as never} />
+              <StatusBadge label={statusLabels[p.payment_status] ?? p.payment_status} tone={tone(p.payment_status) as never} />
             </div>
           </li>
         ))}
