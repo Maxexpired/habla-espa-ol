@@ -98,6 +98,14 @@ export const RecentPurchasesWidget = () => {
     },
   });
 
+  const statusLabels: Record<string, string> = {
+    approved: "Aprobada",
+    pending: "Pendiente",
+    rejected: "Rechazada",
+    failed: "Fallida",
+    refunded: "Reembolsada",
+  };
+
   const tone = (s: string) =>
     s === "approved" ? "success" : s === "pending" ? "warning" : s === "refunded" ? "info" : "danger";
 
