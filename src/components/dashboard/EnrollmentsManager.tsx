@@ -309,7 +309,7 @@ export const EnrollmentsManager = () => {
           emptyTitle="Sin inscripciones"
           emptyDescription="Aquí aparecerán los alumnos inscritos en los cursos."
           views={["table", "cards", "list"]}
-          onRowClick={setInspecting}
+          onRowClick={(row) => setInspecting(row)}
           renderCard={(e) => (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
