@@ -18,6 +18,8 @@ import { Chatbot } from "./components/Chatbot";
 import DashboardLayout from "./pages/dashboard/DashboardLayout";
 import DashboardHome from "./pages/dashboard/DashboardHome";
 import CoursesPage from "./pages/dashboard/CoursesPage";
+import CourseBuilderPage from "./pages/dashboard/CourseBuilderPage";
+
 import EnrollmentsPage from "./pages/dashboard/EnrollmentsPage";
 import ProjectsPage from "./pages/dashboard/ProjectsPage";
 import NewsPage from "./pages/dashboard/NewsPage";
