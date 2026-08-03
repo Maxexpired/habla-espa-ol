@@ -248,7 +248,7 @@ export default function FinancePage() {
         emptyTitle="Sin compras"
         emptyDescription="No hay compras con los filtros actuales."
         pageSize={25}
-        onRowClick={setSelected}
+        onRowClick={(row) => setSelected(row)}
         filters={[
           {
             key: "status",
