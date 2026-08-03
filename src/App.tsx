@@ -42,6 +42,8 @@ const App = () => (
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="courses" element={<CoursesPage />} />
+            <Route path="courses/:id/builder" element={<CourseBuilderPage />} />
+
             <Route path="enrollments" element={<EnrollmentsPage />} />
             <Route path="projects" element={<ProjectsPage />} />
             <Route path="news" element={<NewsPage />} />
